@@ -1,0 +1,418 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 1
+
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = "if obj and obj.set_badges and type(obj.set_badges) == 'function' then"
+position = 'before'
+payload = """if obj and obj.type and obj.type.set_badges and type(obj.type.set_badges) == 'function' then
+    obj.type:set_badges(obj, card, badges)
+end
+"""
+match_indent = true
+
+[[patches]]
+# Localize special planets with special variables.
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "elseif _c.set == 'Planet' then"
+position = "before"
+payload = '''
+elseif _c.set == 'Planet' and _c.config.target then
+    local spec_planet = G.GAME.spec_planets[_c.config.target]
+    local level = spec_planet.level
+    local v1 = spec_planet.v1
+    local v2 = spec_planet.v2
+    loc_vars = {
+        level, localize(_c.config.target), v1, v2,
+        colours = {(level == 1 and G.C.UI.TEXT_DARK or G.C.HAND_LEVELS[math.min(7, level)])}
+    }
+    localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars}
+'''
+match_indent = true
+
+[[patches]]
+# I can't be arsed to figure out the bugs and mysteries and implications of in_pool
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "elseif v.set == 'Planet' then"
+position = "before"
+payload = '''elseif v.can_appear and type(v.can_appear) == 'function' then
+    add = v:can_appear()
+'''
+match_indent = true
+# old patch specific to planets
+#[patches.pattern]
+#target = "functions/common_events.lua"
+#pattern = "if (not v.config.softlock or G.GAME.hands[v.config.hand_type].played > 0) then"
+#position = "at"
+#payload = '''
+#if not v.config.softlock or (v.can_appear and v:can_appear()) or (v.config.hand_type and G.GAME.hands[v.config.hand_type].played > 0) then
+#'''
+
+[[patches]]
+# Interest calculation continuous rather than discrete
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "if G.GAME.dollars >= 5 and not G.GAME.modifiers.no_interest then"
+position = "at"
+payload = '''
+if not G.GAME.modifiers.no_interest and G.GAME.interest_amount > 0 and (G.GAME.dollars + G.GAME.interest_basis_modifier) / (5 / (G.GAME.interest_amount)) >= 1 then
+    local interest = BALIATRO.calculate_interest_amount()
+    local max_possible_interest = BALIATRO.calculate_interest_maximum()
+    add_round_eval_row({bonus = true, name='interest', pitch = pitch, dollars = interest})
+    pitch = pitch + 0.06
+    if not G.GAME.seeded and not G.GAME.challenge then
+        if interest == max_possible_interest then
+            G.PROFILES[G.SETTINGS.profile].career_stats.c_round_interest_cap_streak = G.PROFILES[G.SETTINGS.profile].career_stats.c_round_interest_cap_streak + 1
+        else
+            G.PROFILES[G.SETTINGS.profile].career_stats.c_round_interest_cap_streak = 0
+        end
+    end
+    check_for_unlock({type = 'interest_streak'})
+    dollars = dollars + interest
+end
+
+if false then
+'''
+match_indent = true
+
+
+# booster rerolls
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = '''for i = 1, G.GAME.shop.joker_max - #G.shop_jokers.cards do
+  local new_shop_card = create_card_for_shop(G.shop_jokers)
+  G.shop_jokers:emplace(new_shop_card)
+  new_shop_card:juice_up()
+end'''
+position = 'after'
+payload = '''if G.GAME.current_round.booster_rerolls > 0 then
+    G.GAME.current_round.booster_rerolls = G.GAME.current_round.booster_rerolls - 1
+    local changed = false
+    for i = 1, #G.GAME.current_round.used_packs do
+        if G.GAME.current_round.used_packs[i] ~= 'USED' then
+            G.GAME.current_round.used_packs[i] = get_pack('shop_pack').key
+            changed = true
+        end
+    end
+    if changed then
+        for i = 1, #G.shop_booster.cards do
+            local card = G.shop_booster.cards[i]
+            local p = card.ability.booster_pos
+            local new_center = G.GAME.current_round.used_packs[p]
+            card:set_ability(G.P_CENTERS[new_center])
+            card:juice_up()
+        end
+    end
+end
+'''
+match_indent = true
+
+# variable booster pack count
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = 'for i = 1, 2 do'
+position = 'at'
+payload = 'for i = 1, G.GAME.shop_booster_packs do'
+match_indent = true
+
+# upgradable: badge
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = 'return generate_card_ui(self.config.center, nil, loc_vars, card_type, badges, hide_desc, main_start, main_end, self)'
+position = 'before'
+payload = '''if self.ability.set == "Joker" and self.config.center.upgrades_to then
+    badges[#badges + 1] = 'upgradable'
+end
+'''
+match_indent = true
+
+# upgradable: info queue
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "v = (v == 'holographic' and 'holo' or v)"
+position = 'after'
+payload = '''if v == 'upgradable' then
+    if _c.upgrades_to then
+        local name = localize{type='name_text', key=_c.upgrades_to, set='Joker'}
+        info_queue[#info_queue+1] = {key = 'baliatro_upgradable', set = 'Other', vars = {name}}
+    end
+end
+'''
+match_indent = true
+
+# upgradable: badge color
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = "return G.BADGE_COL[key] or {1, 0, 0, 1}"
+position = 'before'
+payload = "G.BADGE_COL['upgradable'] = HEX '9700b1'"
+match_indent = true
+
+
+# destroy unscored cards
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "-- TARGET: add your own destroying card card areas here"
+position = 'after'
+payload = 'BALIATRO.get_unscored_cardarea({full_hand=G.play.cards, scoring_hand=scoring_hand})'
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "-- context.remove_playing_cards calculations"
+position = 'after'
+payload = 'BALIATRO.clear_unscored_cardarea()'
+match_indent = true
+
+# add perma mult bonus to set_ability
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "perma_bonus = self.ability and self.ability.perma_bonus or 0,"
+position = 'after'
+payload = 'perma_mult = self.ability and self.ability.perma_mult or 0'
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "self.ability.bonus = self.ability.bonus - old_center.config.bonus"
+position = 'at'
+payload = "self.ability.bonus = 0"
+match_indent = true
+
+#local unscored = BALIATRO.unscored({full_hand=G.play.cards, scoring_hand=scoring_hand})
+#for i=1, #unscored do
+#    local destroyed = nil
+#    for j = 1, #G.jokers.cards do
+#        local joker = G.jokers.cards[j]
+#        if joker.ability.supports_destroy_unscoring then
+#            local eval, post = eval_card(G.jokers.cards[j], {destroying_unscored_card = unscored[i], full_hand = G.play.cards})
+#            SMODS.trigger_effects({eval, post}, unscored[i])
+#            if eval.jokers then destroyed = true end
+#        end
+#
+#        if destroyed then
+#            if SMODS.shatters(unscored[i]) then
+#                unscored[i].shattered = true
+#            else
+#                unscored[i].destroyed = true
+#            end
+#            cards_destroyed[#cards_destroyed+1] = unscored[i]
+#        end
+#    end
+#end
+#'''
+#match_indent = true
+
+# edition augment
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "-- TARGET: main scoring on played cards"
+position = 'after'
+payload = '''if card.edition then
+    local ed = G.P_CENTERS[card.edition.key]
+    if ed.augment and type(ed.augment) == 'function' then
+        ed:augment(card, context, ret.playing_card, nil)
+    end
+end
+'''
+match_indent = true
+
+
+# booster pack choices boost
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "G.GAME.pack_choices = self.config.center.config.choose or 1"
+position = "at"
+payload = 'G.GAME.pack_choices = self.ability.choose or self.config.center.config.choose or 1'
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''end        if self.ability.name:find('Arcana') then
+    G.STATE = G.STATES.TAROT_PACK
+    G.GAME.pack_size = self.ability.extra
+elseif self.ability.name:find('Celestial') then
+    G.STATE = G.STATES.PLANET_PACK
+    G.GAME.pack_size = self.ability.extra
+elseif self.ability.name:find('Spectral') then
+    G.STATE = G.STATES.SPECTRAL_PACK
+    G.GAME.pack_size = self.ability.extra
+elseif self.ability.name:find('Standard') then
+    G.STATE = G.STATES.STANDARD_PACK
+    G.GAME.pack_size = self.ability.extra
+elseif self.ability.name:find('Buffoon') then
+    G.STATE = G.STATES.BUFFOON_PACK
+    G.GAME.pack_size = self.ability.extra
+end'''
+position = 'at'
+payload = 'end'
+match_indent = true
+
+#### Voucher rework
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = 'if self.shop_voucher then G.GAME.current_round.voucher = nil end'
+position = 'at'
+payload = 'if self.shop_voucher ~= nil and self.shop_voucher > 0 then BALIATRO.claim_round_voucher(self) end'
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = 'G.GAME.current_round.voucher = nil'
+position = 'at'
+payload = ''
+match_indent = true
+
+# reset voucher
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = 'self.GAME.current_round.voucher = G.SETTINGS.tutorial_progress and G.SETTINGS.tutorial_progress.forced_voucher or get_next_voucher_key()'
+position = 'at'
+payload = 'BALIATRO.reset_round_voucher()'
+match_indent = true
+
+# voucher placement fix
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''G.shop_vouchers = CardArea(
+    G.hand.T.x+0,
+    G.hand.T.y+G.ROOM.T.y + 9,
+    2.1*G.CARD_W,
+    1.05*G.CARD_H,
+    {card_limit = 1, type = 'shop', highlight_limit = 1})'''
+position = 'at'
+payload = '''G.shop_vouchers = CardArea(
+    G.hand.T.x+0,
+    G.hand.T.y+G.ROOM.T.y + 9,
+    2.1*G.CARD_W,
+    1.05*G.CARD_H,
+    {card_limit = #G.GAME.current_round.shop_vouchers, type = 'shop', highlight_limit = 1})'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''if G.GAME.current_round.voucher and G.P_CENTERS[G.GAME.current_round.voucher] then
+    local card = Card(G.shop_vouchers.T.x + G.shop_vouchers.T.w/2,
+    G.shop_vouchers.T.y, G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS[G.GAME.current_round.voucher],{bypass_discovery_center = true, bypass_discovery_ui = true})
+    card.shop_voucher = true
+    create_shop_card_ui(card, 'Voucher', G.shop_vouchers)
+    card:start_materialize()
+    G.shop_vouchers:emplace(card)
+end'''
+position = 'at'
+payload = '''for i, voucher in ipairs(G.GAME.current_round.shop_vouchers) do
+    if voucher then
+        local card = Card(G.shop_vouchers.T.x + G.shop_vouchers.T.w/2, G.shop_vouchers.T.y, G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS[voucher], {bypass_discovery_center = true, bypass_discovery_ui = true})
+        card.shop_voucher = i
+        create_shop_card_ui(card, 'Voucher', G.shop_vouchers)
+        card:start_materialize()
+        G.shop_vouchers:emplace(card)
+    end
+end
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = 'if (G.shop_vouchers and G.shop_vouchers.cards and (G.shop_vouchers.cards[1] or G.GAME.current_round.voucher)) then'
+position = 'at'
+payload = 'if (G.shop_vouchers and G.shop_vouchers.cards and (G.shop_vouchers.cards[1] or BALIATRO.any_voucher_available())) then'
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = 'if not G.GAME.used_vouchers[v.key] then '
+position = 'at'
+payload = 'if not G.GAME.used_vouchers[v.key] or BALIATRO.can_repeat_vouchers() then '
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = 'G.GAME.current_round.voucher = get_next_voucher_key()'
+position = 'at'
+payload = 'BALIATRO.reset_round_voucher()'
+match_indent = true
+
+
+# booster pack cards boost
+# [[patches]]
+# [patches.pattern]
+# target = "card.lua"
+# pattern = "local _size = self.ability.extra"
+# position = "at"
+# payload = 'local _size = self.ability.extra + math.floor(callisto.c_v2)'
+# match_indent = true
+
+#[[patches]]
+#[patches.pattern]
+#target = "functions/common_events.lua"
+#pattern = '''local jokers = card:calculate_joker(context)
+#if jokers then
+#    ret.jokers = jokers
+#end
+#
+#local edition = card:get_edition(context)
+#if edition then
+#    ret.edition = edition
+#end'''
+#position = 'at'
+#payload = '''local jokers = card:calculate_joker(context)
+#if jokers then
+#    ret.jokers = jokers
+#end
+#
+#local edition = card:calculate_edition(context)
+#if edition then
+#    ret.edition = edition
+#end'''
+#match_indent = true
+
+#[[patches]]
+#[patches.regex]
+#target = "functions/state_events.lua"
+#position = "before"
+#pattern = '''end
+#[ \t]*end
+#[ \t]*end
+#[ \t]*
+#[ \t]*delay\(0\.3\)'''
+#
+#payload = '''
+#                    for ii = 1, #effects do
+#                        if effects[ii].transfer and mult > 1 then
+#                            local t = math.min(effects[ii].transfer, mult - 1)
+#                            hand_chips = mod_chips(hand_chips + t)
+#                            mult = mod_mult(mult - t)
+#                            update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+#                            card_eval_status_text(scoring_hand[i], 'extra', nil, percent, nil, {
+#                                message = localize{type="variable", key="a_baliatro_transfer", vars={t}},
+#                                colour = G.C.CHIPS,
+#                            })
+#                        end
+#                    end
+#'''
