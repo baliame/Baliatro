@@ -206,7 +206,7 @@ end
 function BALIATRO.filter_immortal(cards)
     local ret = {}
     for _, card in ipairs(cards) do
-        if not card.ability.baliatro_immortal then
+        if not BALIATRO.is_immortal(card) then
             table.insert(ret, card)
         end
     end
@@ -227,6 +227,9 @@ function BALIATRO.upgrade_joker(joker, apply_perish)
             return true
         end }))
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15, func = function()
+            if not new_center.eternal_compat and joker.ability.eternal then
+                joker:set_eternal(false)
+            end
             joker:set_ability(new_center)
             joker:clear_perishable()
             joker:set_debuff()
@@ -301,6 +304,203 @@ function BALIATRO.tally_edition(ed)
     return ret
 end
 
+
+function BALIATRO.least_scored_rank_scores()
+    local ret = -1
+    for k, v in pairs(G.GAME.ranks_scored) do
+        if ret == -1 or v < ret then ret = v end
+    end
+    return ret
+end
+
+function BALIATRO.most_scored_rank_scores()
+    local ret = -1
+    for k, v in pairs(G.GAME.ranks_scored) do
+        if ret == -1 or v > ret then ret = v end
+    end
+    return ret
+end
+
+function BALIATRO.least_played_hand_times()
+    local ret = -1
+    for k, v in pairs(G.GAME.hands) do
+        if ret == -1 or v.played < ret then ret = v.played end
+    end
+    return ret
+end
+
+function BALIATRO.most_played_hand_times()
+    local ret = -1
+    for k, v in pairs(G.GAME.hands) do
+        if ret == -1 or v.played > ret then ret = v.played end
+    end
+    return ret
+end
+
+
+function BALIATRO.guided_create_card(amt, set, card, pseudo)
+    local created_amt = math.min(G.consumeables.config.card_limit - (#G.consumeables.cards + G.GAME.consumeable_buffer), amt)
+    if created_amt > 0 then
+        G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + created_amt
+        G.E_MANAGER:add_event(Event({trigger = 'before', delay = 0.0, func = (function()
+            for j = 1, created_amt do
+                local card = create_card(set, G.consumeables, nil, nil, nil, nil, card, pseudo)
+                card:add_to_deck()
+                G.consumeables:emplace(card)
+                G.GAME.consumeable_buffer = 0
+            end
+            return true
+        end)}))
+    end
+end
+
+function BALIATRO.rank_sum(context)
+    local sum = 0
+    for _, oc in ipairs(context.scoring_hand) do
+        if not oc.debuff and not SMODS.has_no_rank(oc) then
+            sum = sum + oc.base.nominal
+        end
+    end
+    return sum
+end
+
+function BALIATRO.simple_neg_consumable(seed)
+    local card_type = 'Planet'
+    local colour = G.C.SECONDARY_SET.PLANET
+    local plus_string = 'k_plus_planet'
+    if pseudorandom(seed) < 0.2 then
+        if pseudorandom(seed) < 0.1 then
+            --card_type = 'Postcard'
+            card_type = 'Postcard'
+            colour = G.C.SECONDARY_SET.SPECTRAL
+            plus_string = 'baliatro_plus_postcard'
+        else
+            card_type = 'Spectral'
+            colour = G.C.SECONDARY_SET.SPECTRAL
+            plus_string = 'k_plus_spectral'
+        end
+    else
+        if pseudorandom(seed) < 0.5 then
+            card_type = 'Planet'
+            colour = G.C.SECONDARY_SET.PLANET
+            plus_string = 'k_plus_planet'
+        else
+            card_type = 'Tarot'
+            colour = G.C.SECONDARY_SET.TAROT
+            plus_string = 'k_plus_tarot'
+        end
+    end
+    return card_type, colour, plus_string
+end
+
+function BALIATRO.extra_create_card(amt, negative, card, plus_string, card_type, seed)
+    local created_amt = amt
+    if not negative then
+        created_amt = math.min(amt, G.consumeables.config.card_limit - (#G.consumeables.cards + G.GAME.consumeable_buffer))
+        G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + created_amt
+    end
+
+    return {focus = card, message = localize(plus_string), func = function()
+        G.E_MANAGER:add_event(Event({
+            trigger = 'before',
+            delay = 0.0,
+            func = (function()
+                for i = 1, created_amt do
+                    local l_card = create_card(card_type,G.consumeables, nil, nil, nil, nil, nil, seed)
+                    if negative then
+                        l_card:set_edition({negative = true}, true)
+                    end
+                    l_card:add_to_deck()
+                    G.consumeables:emplace(l_card)
+                end
+                G.GAME.consumeable_buffer = 0
+                return true
+            end)}))
+    end}
+end
+
+function BALIATRO.collect_haunted()
+    local ret = {}
+    for i, card in ipairs(G.playing_cards) do
+        if card.edition and card.edition.key == 'e_baliatro_haunted' then
+            ret[#ret+1] = card
+        end
+    end
+    return ret
+end
+
+function BALIATRO.collect_ethereal()
+    local ret = {}
+    for i, card in ipairs(G.playing_cards) do
+        if card.edition and card.edition.key == 'e_baliatro_ethereal' then
+            ret[#ret+1] = card
+        end
+    end
+    return ret
+end
+
+function BALIATRO.collect_haunted_targets(amt)
+    local candidates = {}
+    for i, card in ipairs(G.playing_cards) do
+        if not card.edition then
+            candidates[#candidates+1] = card
+        end
+    end
+    local ret = {}
+    while #ret < amt and #candidates > 0 do
+        local card, idx = pseudorandom_element(candidates, pseudoseed('haunted_t'))
+        ret[#ret+1] = card
+        table.remove(candidates, idx)
+    end
+    return ret
+end
+
+function BALIATRO.end_of_round()
+    local ethereal = BALIATRO.collect_ethereal()
+    for i, card in ipairs(ethereal) do
+        card:remove_from_deck()
+        card:start_dissolve(nil, true, nil, true)
+    end
+
+    for i, card in ipairs(G.playing_cards) do
+        card.ability.played_this_round = nil
+        card.ability.discarded_this_round = nil
+    end
+end
+
+
+function BALIATRO.setting_blind()
+    local haunted = BALIATRO.collect_haunted()
+    if #haunted > 0 then
+        local transfers = BALIATRO.collect_haunted_targets(#haunted)
+        for i, card in ipairs(haunted) do
+            card:set_edition('e_baliatro_ectoplasmic', true, true)
+        end
+        for i, card in ipairs(transfers) do
+            card:set_edition('e_baliatro_haunted', true, true)
+        end
+    end
+end
+
+function BALIATRO.collect_hand_unhighlighted()
+    local ret = {}
+    for i, hand_card in ipairs(G.hand.cards) do
+        local skip = false
+        for j, highlight_card in ipairs(G.hand.highlighted) do
+            if hand_card == highlight_card then skip = true; break; end
+        end
+        if not skip then ret[#ret+1] = hand_card end
+    end
+    return ret
+end
+
+function BALIATRO.is_immortal(card)
+    return card.ability.baliatro_immortal or (card.edition and card.edition.is_immortal)
+end
+
+function BALIATRO.is_plain(card)
+    return card.debuff or (card.ability.set ~= 'Enhanced' and not card.seal and not card.edition)
+end
 
 return {
     name = "Baliatro Utils",

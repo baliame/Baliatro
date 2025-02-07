@@ -30,8 +30,13 @@ load_file('postcards.lua')
 load_file('spectral.lua')
 load_file('tarot.lua')
 load_file('vouchers.lua')
+load_file('blinds.lua')
+load_file('enhancement.lua')
 
 SMODS.current_mod.reset_game_globals = BALIATRO.reset_game_globals
+SMODS.current_mod.set_ability_reset_keys = function()
+    return {'discarded_this_ante', 'played_this_round', 'discarded_this_round', 'cannot_be_debuffed'}
+end
 
 return {
     name = "BALIATRO",

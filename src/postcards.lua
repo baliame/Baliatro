@@ -33,10 +33,10 @@ SMODS.Booster {
 	kind = "Postcard",
 	atlas = "BaliatroPacks",
 	pos = { x = 1, y = 0 },
-	config = { extra = 2, choose = 1 },
+	config = { extra = 3, choose = 1 },
 	cost = 4,
 	order = 1,
-	weight = 1.0,
+	weight = 0.95,
     loc_txt = {
 		name = "Postcard Pack",
         text = {
@@ -196,7 +196,7 @@ SMODS.Consumable {
         if #temp_pool > 0 then
             eligible_card = pseudorandom_element(temp_pool, pseudoseed('nice'))
         else
-            eligible_card = create_card('Joker', G.jokers, nil, nil, nil, nil, nil, 'nuce')
+            eligible_card = create_card('Joker', G.jokers, nil, nil, nil, nil, nil, 'nice')
             eligible_card:add_to_deck()
             G.jokers:emplace(eligible_card)
         end
@@ -353,7 +353,7 @@ SMODS.Consumable {
     key = "mecca",
     name = "postcard-Mecca",
     atlas = "BaliatroPostcard",
-	pos = { x = 0, y = 0 },
+	pos = { x = 6, y = 0 },
     cost = 10,
     order = 6,
     rarity = 3,
@@ -382,17 +382,17 @@ SMODS.Consumable {
 }
 
 -- 7. Moscow
--- Create 15 random Negative Common Rental jokers.
+-- Create 10 random Negative Common Rental jokers.
 SMODS.Consumable {
     set = "Postcard",
     key = "moscow",
     name = "postcard-Moscow",
     atlas = "BaliatroPostcard",
-	pos = { x = 0, y = 0 },
+	pos = { x = 7, y = 0 },
     cost = 10,
     order = 7,
     config = {
-        count = 15,
+        count = 10,
     },
     rarity = 1,
 
@@ -424,13 +424,13 @@ SMODS.Consumable {
 }
 
 -- 8. Amsterdam
--- Add Polychrome to all Jokers. Permanently lose 1 hand and 1 discard.
+-- Add Polychrome to all Editionless Jokers. Permanently lose 1 hand and 1 discard.
 SMODS.Consumable {
     set = "Postcard",
     key = "amsterdam",
     name = "postcard-Amsterdam",
     atlas = "BaliatroPostcard",
-	pos = { x = 0, y = 0 },
+	pos = { x = 8, y = 0 },
     cost = 10,
     order = 8,
     config = {
@@ -445,7 +445,7 @@ SMODS.Consumable {
     end,
 
     can_use = function(self, card)
-        return #G.jokers.highlighted == 1
+        return true
     end,
 
     use = function(self, card, area, copier)
@@ -469,7 +469,7 @@ SMODS.Consumable {
     key = "detroit",
     name = "postcard-Detroit",
     atlas = "BaliatroPostcard",
-	pos = { x = 0, y = 0 },
+	pos = { x = 9, y = 0 },
     cost = 10,
     order = 9,
     config = {
@@ -498,7 +498,7 @@ SMODS.Consumable {
         local used_tarot = copier or card
         ease_ante(-card.ability.consumeable.antes)
         G.GAME.round_resets.blind_ante = G.GAME.round_resets.blind_ante or G.GAME.round_resets.ante
-        G.GAME.round_resets.blind_ante = math.max(0, G.GAME.round_resets.blind_ante - -card.ability.consumeable.antes)
+        G.GAME.round_resets.blind_ante = math.max(0, G.GAME.round_resets.blind_ante + -card.ability.consumeable.antes)
         for i = 1, card.ability.consumeable.burglars do
             G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
                 play_sound('timpani')
@@ -521,7 +521,7 @@ SMODS.Consumable {
     key = "las_vegas",
     name = "postcard-LasVegas",
     atlas = "BaliatroPostcard",
-	pos = { x = 0, y = 0 },
+	pos = { x = 0, y = 1 },
     cost = 10,
     order = 10,
     config = {
@@ -600,7 +600,7 @@ SMODS.Consumable {
     key = "monte_carlo",
     name = "postcard-MonteCarlo",
     atlas = "BaliatroPostcard",
-	pos = { x = 0, y = 0 },
+	pos = { x = 1, y = 1 },
     cost = 10,
     order = 11,
     config = {
@@ -636,6 +636,7 @@ SMODS.Consumable {
 
     use = function(self, card, area, copier)
         local used_tarot = copier or card
+        used_tarot:juice_up()
         local order = {}
         local options = {"hand_size", "discards", "hands", "consumable_slots", "booster_pack_slots", "interest_levels", "all_hand_levels"}
         for i = 1, card.ability.consumeable.wins do
@@ -707,7 +708,13 @@ SMODS.Consumable {
                         func = function()
                             local amt = card.ability.consumeable.all_hand_levels * outcome
                             for k, v in pairs(G.GAME.hands) do
-                                level_up_hand(nil, k, true, amt)
+                                local hamt = amt
+                                if hamt < 0 and G.GAME.hands[k].level > 1 then
+                                    hamt = math.max(hamt, 1 - G.GAME.hands[k].level)
+                                end
+                                if hamt ~= 0 then
+                                    level_up_hand(nil, k, true, amt)
+                                end
                             end
                             card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize{type='variable',key='a_baliatro_monte_carlo_all_hand_levels',vars={amt}}})
                             return true
@@ -722,13 +729,13 @@ SMODS.Consumable {
 
 
 -- 12. Munich
--- Remove Perishable and Negative from a random Perishable Joker. -1 Joker Slot. If you have no Perishable Jokers, gain +1 Consumable Slot instead.
+-- Remove Perishable and Negative from a random Perishable Joker. If you have no Perishable Jokers, gain +1 Consumable Slot instead.
 SMODS.Consumable {
     set = "Postcard",
     key = "munich",
     name = "postcard-Munich",
     atlas = "BaliatroPostcard",
-	pos = { x = 0, y = 0 },
+	pos = { x = 2, y = 1 },
     cost = 10,
     order = 12,
     config = {
@@ -747,7 +754,8 @@ SMODS.Consumable {
         return true
     end,
 
-    use = function(self, card)
+    use = function(self, card, area, copier)
+        local used_tarot = copier or card
         local perishables = BALIATRO.collect_perishables()
         if #perishables > 0 then
             local target = pseudorandom_element(perishables, pseudoseed('munich'))
@@ -757,11 +765,12 @@ SMODS.Consumable {
                 target:set_edition(nil, true, true)
             end
             card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize{type='variable',key='a_baliatro_minus_joker_slots',vars={card.ability.consumeable.joker_slots}}})
-            G.jokers.config.card_limit = G.jokers.config.card_limit - card.ability.consumeable.joker_slots
+            --G.jokers.config.card_limit = G.jokers.config.card_limit - card.ability.consumeable.joker_slots
         else
             card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize{type='variable',key='a_baliatro_plus_consumable_slots',vars={card.ability.consumeable.consumable_slots}}})
             G.consumeables.config.card_limit = G.consumeables.config.card_limit + card.ability.consumeable.consumable_slots
         end
+        used_tarot:juice_up()
     end
 }
 
@@ -773,13 +782,13 @@ SMODS.Consumable {
     key = "paris",
     name = "postcard-Paris",
     atlas = "BaliatroPostcard",
-	pos = { x = 0, y = 0 },
+	pos = { x = 3, y = 1 },
     cost = 10,
     order = 13,
     config = {
-        enhancement_odds = 6,
-        seal_odds = 12,
-        edition_odds = 15,
+        enhancement_odds = 5,
+        seal_odds = 10,
+        edition_odds = 10,
     },
     rarity = 3,
 
@@ -792,7 +801,8 @@ SMODS.Consumable {
         return true
     end,
 
-    use = function(self, card)
+    use = function(self, card, area, copier)
+        local used_tarot = copier or card
         for _, playing_card in ipairs(G.deck.cards) do
             local counter = 0
             if playing_card.config.center.key == "c_base" and pseudorandom('paris') < G.GAME.probabilities.normal / card.ability.consumeable.enhancement_odds then
@@ -814,6 +824,7 @@ SMODS.Consumable {
                 playing_card:set_immortal(true)
             end
         end
+        used_tarot:juice_up()
     end
 }
 
@@ -824,7 +835,7 @@ SMODS.Consumable {
     key = "london",
     name = "postcard-London",
     atlas = "BaliatroPostcard",
-	pos = { x = 0, y = 0 },
+	pos = { x = 4, y = 1 },
     cost = 10,
     order = 14,
     config = {
@@ -855,7 +866,8 @@ SMODS.Consumable {
         return false
     end,
 
-    use = function(self, card)
+    use = function(self, card, area, copier)
+        local used_tarot = copier or card
         for i, highlight in ipairs(G.jokers.highlighted) do
             local apply_perish = false
             if highlight.edition and highlight.edition.negative and G.GAME.probabilities.normal * card.ability.consumeable.prob / card.ability.consumeable.odds < pseudorandom('london') then
@@ -865,6 +877,7 @@ SMODS.Consumable {
         end
         ease_dollars(-card.ability.consumeable.lose)
         G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.jokers:unhighlight_all(); return true end }))
+        used_tarot:juice_up()
     end
 }
 
@@ -875,13 +888,13 @@ SMODS.Consumable {
     key = "cairo",
     name = "postcard-Cairo",
     atlas = "BaliatroPostcard",
-	pos = { x = 0, y = 0 },
+	pos = { x = 5, y = 1 },
     cost = 10,
     order = 12,
     config = {
         max = 1,
     },
-    rarity = 2,
+    rarity = 1,
 
     loc_vars = function(self, info_queue, card)
         info_queue[#info_queue+1] = {key='perishable', set='Other', vars = {G.GAME.perishable_rounds or 1, G.GAME.perishable_rounds}}
@@ -901,10 +914,126 @@ SMODS.Consumable {
         return false
     end,
 
-    use = function(self, card)
+    use = function(self, card, area, copier)
+        local used_tarot = copier or card
         for _, joker in ipairs(G.jokers.highlighted) do
             joker:set_eternal(true)
         end
+        used_tarot:juice_up()
+    end
+}
+
+-- 16. Copenhagen
+-- The times each hand type was played and the times each rank was scored is set to the double of highest of each.
+SMODS.Consumable {
+    set = "Postcard",
+    key = "copenhagen",
+    name = "postcard-Copenhagen",
+    atlas = "BaliatroPostcard",
+	pos = { x = 6, y = 1 },
+    cost = 10,
+    order = 16,
+    config = {
+    },
+    rarity = 2,
+
+    can_use = function(self, card)
+        return true
+    end,
+
+    use = function(self, card, area, copier)
+        local used_tarot = copier or card
+        local mph = BALIATRO.most_played_hand_times() * 2
+        local msr = BALIATRO.most_scored_rank_scores() * 2
+        for k, v in pairs(G.GAME.hands) do
+            v.played = mph
+        end
+        for k, _ in pairs(G.GAME.ranks_scored) do
+            G.GAME.ranks_scored[k] = msr
+        end
+        used_tarot:juice_up()
+    end
+}
+
+-- 17. Singapore
+-- Increase the rank of all cards in your deck by one. Fill your empty consumeable slots with Strength.
+SMODS.Consumable {
+    set = "Postcard",
+    key = "singapore",
+    name = "postcard-Singapore",
+    atlas = "BaliatroPostcard",
+	pos = { x = 7, y = 1 },
+    cost = 10,
+    order = 17,
+    config = {
+    },
+    rarity = 2,
+
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = G.P_CENTERS['c_strength']
+        return { vars = {}}
+    end,
+
+    can_use = function(self, card)
+        return true
+    end,
+
+    use = function(self, card, area, copier)
+        local used_tarot = copier or card
+        for _, playing_card in ipairs(G.deck.cards) do
+            local rank = SMODS.Ranks[playing_card.base.value]
+            local new_rank = rank.next[1]
+            SMODS.change_base(playing_card, nil, new_rank)
+        end
+        G.E_MANAGER:add_event(Event({
+            trigger = 'before',
+            delay = 0.0,
+            func = (function()
+                for i = #G.consumeables.cards + G.GAME.consumeable_buffer, G.consumeables.config.card_limit do
+                    local created_card = create_card("Tarot", G.consumeables, nil, nil, nil, nil, "c_strength", "singapore")
+                    created_card:add_to_deck()
+                    G.consumeables:emplace(created_card)
+                    G.GAME.consumeable_buffer = 0
+                end
+                return true
+            end )
+        }))
+
+        used_tarot:juice_up()
+    end
+}
+
+-- 18. Kyoto
+-- Apply Haunted to 2 random cards in your deck.
+SMODS.Consumable {
+    set = "Postcard",
+    key = "kyoto",
+    name = "postcard-Kyoto",
+    atlas = "BaliatroPostcard",
+	pos = { x = 8, y = 1 },
+    cost = 10,
+    order = 17,
+    config = {
+        amt = 4,
+    },
+    rarity = 2,
+
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = G.P_CENTERS.e_baliatro_haunted
+        return { vars = {card.ability.consumeable.amt}}
+    end,
+
+    can_use = function(self, card)
+        return true
+    end,
+
+    use = function(self, card, area, copier)
+        local used_tarot = copier or card
+        local targets = BALIATRO.collect_haunted_targets(card.ability.consumeable.amt)
+        for i, other in ipairs(targets) do
+            other:set_edition('e_baliatro_haunted')
+        end
+        used_tarot:juice_up()
     end
 }
 

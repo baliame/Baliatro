@@ -14,7 +14,7 @@ SMODS.Booster {
 	config = { extra = 2, choose = 1 },
 	cost = 12,
 	order = 3,
-	weight = 0.15,
+	weight = 0.2,
 	create_card = function(self, card)
 		return create_card("Joker", G.pack_cards, nil, "baliatro_upgraded", true, true, nil, "upgraded_pack")
 	end,
@@ -265,11 +265,11 @@ SMODS.Joker {
     key = "crest",
     config = {
         extra = {
-            x_mult = 1.5,
+            x_mult = 2,
         }
     },
     pos = {
-        x = 0,
+        x = 7,
         y = 0,
     },
     unlocked = true,
@@ -309,7 +309,7 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
+        x = 8,
         y = 0,
     },
     unlocked = true,
@@ -349,7 +349,7 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
+        x = 9,
         y = 0,
     },
     unlocked = true,
@@ -371,47 +371,11 @@ SMODS.Joker {
 
     calculate = function(self, card, context)
         if context.cardarea == G.play and context.individual and context.other_card and context.other_card:get_id() == 8 then
-            if pseudorandom('8ball') < G.GAME.probabilities.normal / card.ability.extra.odds then
-                local card_type = 'Planet'
-                local colour = G.C.SECONDARY_SET.PLANET
-                local plus_string = 'k_plus_planet'
-                if pseudorandom('8ball') < 0.25 then
-                    if pseudorandom('8ball') < 0.1 then
-                        --card_type = 'Postcard'
-                        card_type = 'Postcard'
-                        colour = G.C.SECONDARY_SET.SPECTRAL
-                        plus_string = 'baliatro_plus_postcard'
-                    else
-                        card_type = 'Spectral'
-                        colour = G.C.SECONDARY_SET.SPECTRAL
-                        plus_string = 'k_plus_spectral'
-                    end
-                else
-                    if pseudorandom('8ball') < 0.5 then
-                        card_type = 'Planet'
-                        colour = G.C.SECONDARY_SET.PLANET
-                        plus_string = 'k_plus_planet'
-                    else
-                        card_type = 'Tarot'
-                        colour = G.C.SECONDARY_SET.TAROT
-                        plus_string = 'k_plus_tarot'
-                    end
-                end
+            if pseudorandom('am8ball') < G.GAME.probabilities.normal / card.ability.extra.odds then
+                local card_type, colour, plus_string = BALIATRO.simple_neg_consumable('am8ball')
 
                 return {
-                    extra = {focus = card, message = localize(plus_string), func = function()
-                        G.E_MANAGER:add_event(Event({
-                            trigger = 'before',
-                            delay = 0.0,
-                            func = (function()
-                                    local l_card = create_card(card_type,G.consumeables, nil, nil, nil, nil, nil, '8ba')
-                                    l_card:set_edition({negative = true}, true)
-                                    l_card:add_to_deck()
-                                    G.consumeables:emplace(l_card)
-                                    G.GAME.consumeable_buffer = 0
-                                return true
-                            end)}))
-                    end},
+                    extra = BALIATRO.extra_create_card(1, true, card, plus_string, card_type, 'am8ball'),
                     colour = colour,
                     card = context.blueprint_card or card
                 }
@@ -433,7 +397,7 @@ SMODS.Joker {
     },
     pos = {
         x = 0,
-        y = 0,
+        y = 1,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -472,8 +436,8 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 1,
+        y = 1,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -533,8 +497,8 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 2,
+        y = 1,
     },
     unlocked = true,
     blueprint_compat = false,
@@ -576,8 +540,8 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 3,
+        y = 1,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -586,6 +550,9 @@ SMODS.Joker {
     cost = 6,
     rarity = "baliatro_upgraded",
     atlas = "BaliatroUp",
+    pixel_size = {
+        h = 66
+    },
 
     new_york = {
         compatible = true,
@@ -617,8 +584,8 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 4,
+        y = 1,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -689,13 +656,13 @@ SMODS.Joker {
     key = "mind_the_gap",
     config = {
         extra = {
-            x_mult_per_hand = 0.3,
+            x_mult_per_hand = 0.15,
             x_mult = 1,
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 5,
+        y = 1,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -755,8 +722,8 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 6,
+        y = 1,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -810,8 +777,8 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 7,
+        y = 1,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -858,8 +825,8 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 8,
+        y = 1,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -905,12 +872,12 @@ SMODS.Joker {
     config = {
         extra = {
             created = 2,
-            maximum = 6
+            maximum = 7
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 9,
+        y = 1,
     },
     unlocked = true,
     blueprint_compat = false,
@@ -952,18 +919,18 @@ SMODS.Joker {
 }
 
 -- 20. Hanginger Chad
--- Retrigger first played card used in scoring 4 additional times.
+-- Retrigger first played card used in scoring 3 additional times.
 SMODS.Joker {
     name = "Hanginger Chad",
     key = "hanginger_chad",
     config = {
         extra = {
-            repeats = 4
+            repeats = 3
         }
     },
     pos = {
         x = 0,
-        y = 0,
+        y = 2,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -1005,8 +972,8 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 1,
+        y = 2,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -1056,8 +1023,8 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 2,
+        y = 2,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -1135,8 +1102,8 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 3,
+        y = 2,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -1177,8 +1144,8 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 4,
+        y = 2,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -1199,47 +1166,11 @@ SMODS.Joker {
 
     calculate = function(self, card, context)
         if context.open_booster then
-            if pseudorandom('halu'..G.GAME.round_resets.ante) < G.GAME.probabilities.normal / card.ability.extra.odds then
-                local card_type = 'Planet'
-                local colour = G.C.SECONDARY_SET.PLANET
-                local plus_string = 'k_plus_planet'
-                if pseudorandom('8ball') < 0.25 then
-                    if pseudorandom('8ball') < 0.1 then
-                        --card_type = 'Postcard'
-                        card_type = 'Postcard'
-                        colour = G.C.SECONDARY_SET.SPECTRAL
-                        plus_string = 'baliatro_plus_postcard'
-                    else
-                        card_type = 'Spectral'
-                        colour = G.C.SECONDARY_SET.SPECTRAL
-                        plus_string = 'k_plus_spectral'
-                    end
-                else
-                    if pseudorandom('8ball') < 0.5 then
-                        card_type = 'Planet'
-                        colour = G.C.SECONDARY_SET.PLANET
-                        plus_string = 'k_plus_planet'
-                    else
-                        card_type = 'Tarot'
-                        colour = G.C.SECONDARY_SET.TAROT
-                        plus_string = 'k_plus_tarot'
-                    end
-                end
+            if pseudorandom('trip'..G.GAME.round_resets.ante) < G.GAME.probabilities.normal / card.ability.extra.odds then
+                local card_type, colour, plus_string = BALIATRO.simple_neg_consumable('trip')
 
                 return {
-                    extra = {focus = card, message = localize(plus_string), func = function()
-                        G.E_MANAGER:add_event(Event({
-                            trigger = 'before',
-                            delay = 0.0,
-                            func = (function()
-                                    local l_card = create_card(card_type,G.consumeables, nil, nil, nil, nil, nil, '8ba')
-                                    l_card:set_edition({negative = true}, true)
-                                    l_card:add_to_deck()
-                                    G.consumeables:emplace(l_card)
-                                    G.GAME.consumeable_buffer = 0
-                                return true
-                            end)}))
-                    end},
+                    extra = BALIATRO.extra_create_card(1, true, card, plus_string, card_type, 'trip'),
                     colour = colour,
                     card = context.blueprint_card or card
                 }
@@ -1260,8 +1191,8 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 5,
+        y = 2,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -1301,8 +1232,8 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 6,
+        y = 2,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -1339,18 +1270,18 @@ SMODS.Joker {
 }
 
 -- 27. Uneven Freeman
--- Played cards with odd rank gain +31 Chips when scored.
+-- Played cards with odd rank gain +51 Chips when scored.
 SMODS.Joker {
     name = "Uneven Freeman",
     key = "uneven_freeman",
     config = {
         extra = {
-            chips = 31,
+            chips = 51,
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 7,
+        y = 2,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -1390,12 +1321,12 @@ SMODS.Joker {
     key = "multiple_of_two_lou",
     config = {
         extra = {
-            mult = 4,
+            mult = 6,
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 8,
+        y = 2,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -1421,9 +1352,106 @@ SMODS.Joker {
                 return {
                     extra = {message = localize('k_upgrade_ex'), colour = G.C.MULT},
                     colour = G.C.MULT,
-                    card = context.blueprint_card or card
+                    card = context.blueprint_card or card,
+                    mult = card.ability.extra.mult,
                 }
             end
+        end
+    end
+}
+
+-- 29.
+-- Scoring cards grant Mult equal to the number of times their Rank has been scored.
+SMODS.Joker {
+    name = "Senior Appraiser Joker",
+    key = "senior_appraiser_joker",
+    pos = {
+        x = 0,
+        y = 0,
+    },
+
+    config = {
+        extra = {
+            mult = 1,
+        },
+    },
+
+    new_york = {
+        compatible = true,
+    },
+
+    unlocked = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 4,
+    rarity = "baliatro_upgraded",
+    atlas = "BaliatroUp",
+
+    loc_vars = function(self, info_queue, card)
+        return {vars = {card.ability.extra.mult}}
+    end,
+
+    calculate = function(self, card, context)
+        if context.individual and context.cardarea == G.play and not context.repetition then
+            local other = context.other_card
+            local times_scored = G.GAME.ranks_scored[other.base.value]
+            if times_scored > 0 then
+                return {
+                    mult = times_scored * card.ability.extra.mult,
+                }
+            end
+        end
+    end
+}
+
+-- 30.
+-- X1 Mult. Gain +X0.02 Mult, when a card with the most scored rank is scored.
+SMODS.Joker {
+    name = "King of All Cosmos",
+    key = "king_of_all_cosmos",
+    pos = {
+        x = 0,
+        y = 0,
+    },
+    config = {
+        extra = {
+            xmult = 1,
+            xmult_gain = 0.02,
+        }
+    },
+
+    new_york = {
+        compatible = true,
+    },
+
+    unlocked = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 4,
+    rarity = "baliatro_upgraded",
+    atlas = "BaliatroUp",
+
+    loc_vars = function(self, info_queue, card)
+        return {vars = {card.ability.extra.xmult, card.ability.extra.xmult_gain}}
+    end,
+
+    calculate = function(self, card, context)
+
+        if context.individual and context.cardarea == G.play and not context.blueprint then
+            local msr = BALIATRO.most_scored_rank_scores()
+            if G.GAME.ranks_scored[context.other_card.base.value] == msr then
+                card.ability.extra.xmult = card.ability.extra.xmult + card.ability.extra.xmult_gain
+                return {
+                    message = localize('k_upgrade_ex'),
+                    card = card,
+                }
+            end
+        elseif context.joker_main and card.ability.extra.xmult ~= 1 then
+            return {
+                xmult = card.ability.extra.xmult,
+            }
         end
     end
 }

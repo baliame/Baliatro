@@ -109,6 +109,7 @@ SMODS.Edition {
     extra_cost = 1,
     apply_to_float = true,
     shader = "faded_foil",
+    sound = { sound = 'foil1', per=0.5, vol=0.4 },
 
     loc_vars = function(self)
         if G.GAME then
@@ -150,6 +151,7 @@ SMODS.Edition {
     extra_cost = 1,
     apply_to_float = true,
     shader = "faded_holo",
+    sound = { sound = 'holo1', per=0.5, vol=0.4 },
 
     loc_vars = function(self)
         if G.GAME then
@@ -192,6 +194,7 @@ SMODS.Edition {
     extra_cost = 1,
     apply_to_float = true,
     shader = "faded_polychrome",
+    sound = { sound = 'polychrome1', per=0.5, vol=0.4 },
 
     loc_vars = function(self)
         if G.GAME then
@@ -236,6 +239,7 @@ SMODS.Edition {
     extra_cost = 5,
     apply_to_float = true,
     shader = "photographic",
+    sound = { sound = 'gold_seal', per=1.0, vol=0.7 },
 
     loc_vars = function(self)
         if G.GAME then
@@ -311,6 +315,7 @@ SMODS.Edition {
             reduction = 0.001,
         }
     },
+    sound = { sound = 'polychrome1', per=1.0, vol=0.7 },
 
     loc_vars = function(self, info_queue, card)
         local ed_level = G.GAME.spec_planets["baliatro_scenic"]
@@ -333,7 +338,7 @@ SMODS.Edition {
     end,
 
     augment = function(self, card, context, o, t)
-        if context.check_enhancement or not(context.edition or context.individual or context.main_scoring or context.repetition) or not o then return o, t end
+        if context.check_enhancement or not(context.edition or context.individual or context.main_scoring or context.repetition or context.joker_main) or not o then return o, t end
         local trigger_keys = {'chips', 'h_chips', 'chip_mod', 'mult', 'h_mult', 'mult_mod', 'x_mult', 'Xmult', 'xmult', 'x_mult_mod', 'Xmult_mod', 'p_dollars', 'dollars', 'h_dollars', 'level_up', 'repetitions'}        local valid = false
         for i, tk in ipairs(trigger_keys) do
             if o[tk] then
@@ -355,7 +360,7 @@ SMODS.Edition {
     end,
 
     calculate = function(self, card, context)
-        if (context.cardarea == G.jokers and context.edition and context.pre_joker) or (context.cardarea == G.play and context.main_scoring)  then
+        if (context.cardarea == G.jokers and context.edition and context.pre_joker) or (context.cardarea == G.play and context.main_scoring) and card.edition.extra.chips ~= 0 then
             return {
                 chip_mod = card.edition.extra.chips
             }
@@ -368,6 +373,131 @@ SMODS.Edition {
         end
     end
 }
+
+SMODS.Shader {
+    key = 'haunted',
+    path = 'haunted.fs',
+}
+
+SMODS.Sound {
+    key = 'bell',
+    path = 'bell.ogg'
+}
+
+SMODS.Edition {
+    name = "Haunted",
+    key = "haunted",
+    unlocked = true,
+    in_shop = false,
+    weight = 3,
+    extra_cost = 1,
+    apply_to_float = true,
+    shader = "haunted",
+    config = {
+        extra = {
+            created_amt = 1,
+            destroy_odds = 3,
+        },
+        is_immortal = true,
+    },
+    sound = { sound = 'baliatro_bell', per=1.0, vol=0.8 },
+
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = G.P_CENTERS['e_baliatro_ectoplasmic']
+        info_queue[#info_queue+1] = {key='baliatro_immortal', set='Other'}
+        return {vars={self.config.extra.created_amt, (G.GAME and G.GAME.probabilities.normal) or 1, self.config.extra.destroy_odds}}
+    end,
+
+    calculate = function(self, card, context)
+        if context.cardarea == G.play and context.main_scoring then
+            local card_type, colour, plus_string = BALIATRO.simple_neg_consumable('haunted')
+            return {
+                extra = BALIATRO.extra_create_card(card.edition.extra.created_amt, true, card, plus_string, card_type, 'haunted'),
+                colour = colour,
+                card = card,
+            }
+        elseif context.cardarea == G.play and context.destroy_card then
+            if pseudorandom('haunted') < G.GAME.probabilities.normal / card.edition.extra.destroy_odds then
+                return { remove = true }
+            end
+        end
+    end,
+}
+
+SMODS.Shader {
+    key = 'ectoplasmic',
+    path = 'ectoplasmic.fs',
+}
+
+SMODS.Edition {
+    name = "Ectoplasmic",
+    key = "ectoplasmic",
+    unlocked = true,
+    in_shop = false,
+    weight = 3,
+    extra_cost = 1,
+    apply_to_float = true,
+    shader = "ectoplasmic",
+    config = {
+        extra = {
+            xmult = 0.75,
+        },
+    },
+    sound = { sound = 'baliatro_bell', per=1.0, vol=0.4 },
+    disable_base_shader = true,
+    disable_shadow = true,
+
+    loc_vars = function(self, info_queue, card)
+        return {vars={self.config.extra.xmult}}
+    end,
+
+    calculate = function(self, card, context)
+        if context.cardarea == G.play and context.main_scoring then
+            return {
+                xmult = card.edition.extra.xmult
+            }
+        elseif context.cardarea == G.play and context.final_scoring_step then
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.1, func = function()
+                card:set_edition(nil, false, true)
+                return true
+            end}))
+        end
+    end,
+}
+
+SMODS.Shader {
+    key = 'ethereal',
+    path = 'ethereal.fs',
+}
+
+SMODS.Edition {
+    name = "Ethereal",
+    key = "ethereal",
+    unlocked = true,
+    in_shop = false,
+    weight = 3,
+    extra_cost = 1,
+    apply_to_float = true,
+    shader = "ethereal",
+    config = {
+        prevent_discard = true,
+    },
+    sound = { sound = 'baliatro_bell', per=0.9, vol=0.6},
+    disable_base_shader = true,
+    disable_shadow = true,
+
+    loc_vars = function(self, info_queue, card)
+        return {vars={}}
+    end,
+
+
+    calculate = function(self, card, context)
+        if (context.destroy_card and context.destroying_card == card) or (context.other_discarded and context.other_card == card and (not card.edition.created_on_discard or card.edition.created_on_discard ~= G.GAME.current_round.discards_used)) then
+            return {remove = true}
+        end
+    end,
+}
+
 
 return {
     name = "Baliatro Editions",
