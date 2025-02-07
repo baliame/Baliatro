@@ -69,6 +69,28 @@ Card.get_chip_mult = function (self)
     return mult + pm
 end
 
+local cgpd = Card.get_p_dollars
+
+Card.get_p_dollars = function (self)
+    local dollars = cgpd(self)
+    local pd = (self.ability and self.ability.perma_dollars) or 0
+    return dollars + pd
+end
+
+local cgcxm = Card.get_chip_x_mult
+
+Card.get_chip_x_mult = function (self, context)
+    local xmult = cgcxm(self, context)
+    local perma_xmult = (self.ability and self.ability.perma_xmult) or 0
+    if perma_xmult == 0 then
+        return xmult
+    end
+    if xmult == 0 then
+        return perma_xmult + 1
+    end
+    return xmult * (perma_xmult + 1)
+end
+
 local catd = Card.add_to_deck
 Card.add_to_deck = function (self, from_debuff)
     local ret = catd(self, from_debuff)

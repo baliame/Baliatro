@@ -182,7 +182,9 @@ match_indent = true
 target = "card.lua"
 pattern = "perma_bonus = self.ability and self.ability.perma_bonus or 0,"
 position = 'after'
-payload = 'perma_mult = self.ability and self.ability.perma_mult or 0'
+payload = '''perma_mult = self.ability and self.ability.perma_mult or 0,
+perma_dollars = self.ability and self.ability.perma_dollars or 0,
+perma_xmult = self.ability and self.ability.perma_xmult or 0,'''
 match_indent = true
 
 [[patches]]
@@ -358,6 +360,154 @@ position = 'at'
 payload = 'BALIATRO.reset_round_voucher()'
 match_indent = true
 
+# count number of times each rank is scored
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "-- TARGET: main scoring on played cards"
+position = 'after'
+payload = '''
+if not SMODS.has_no_rank(card) then
+    G.GAME.ranks_scored[card.base.value] = G.GAME.ranks_scored[card.base.value] + 1
+end
+'''
+match_indent = true
+
+# count if card was discarded this ante
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "v.ability.played_this_ante = nil"
+position = 'before'
+payload = 'v.ability.discarded_this_ante = nil'
+match_indent = true
+
+# flexible discard target 1
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "-- TARGET: pre_discard"
+position = 'after'
+payload = """local target = G.discard
+local shuffle_target = false
+if G.GAME.blind and G.GAME.blind.in_blind and G.GAME.blind.config and G.GAME.blind.config.blind and G.GAME.blind.config.blind.discard_to_deck then
+    target = G.deck
+    shuffle_target = true
+end
+"""
+match_indent = true
+
+# flexible discard target 2
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "draw_card(G.hand, G.discard, i*100/highlighted_count, 'down', false, G.hand.highlighted[i])"
+position = 'at'
+payload = """G.hand.highlighted[i].ability.discarded_this_round = true
+draw_card(G.hand, target, i*100/highlighted_count, 'down', false, G.hand.highlighted[i])"""
+match_indent = true
+
+# flexible discard target 3
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "-- TARGET: effects after cards destroyed in discard"
+position = 'after'
+payload = "if shuffle_target then target:shuffle('dcfh' .. G.GAME.round_resets.ante) end"
+match_indent = true
+
+# post_discard
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "-- TARGET: effects after cards destroyed in discard"
+position = 'after'
+payload = """if G.GAME.blind and G.GAME.blind.in_blind and G.GAME.blind.config and G.GAME.blind.config.blind and G.GAME.blind.config.blind.after_discard and type(G.GAME.blind.config.blind.after_discard) == 'function' then
+    G.GAME.blind.config.blind:after_discard()
+end
+"""
+match_indent = true
+
+# extra mult display
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''if specific_vars.bonus_chips then
+    localize{type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = {specific_vars.bonus_chips}}
+end'''
+position = 'after'
+payload = '''if specific_vars.perma_mult and specific_vars.perma_mult > 0 then
+    localize{type = 'other', key = 'card_extra_mult', nodes = desc_nodes, vars = {specific_vars.perma_mult}}
+end
+if specific_vars.perma_dollars and specific_vars.perma_dollars > 0 then
+    localize{type = 'other', key = 'card_extra_dollars', nodes = desc_nodes, vars = {specific_vars.perma_dollars}}
+end
+if specific_vars.perma_xmult and specific_vars.perma_xmult ~= 1 then
+    localize{type = 'other', key = 'card_extra_xmult', nodes = desc_nodes, vars = {specific_vars.perma_xmult}}
+end
+'''
+match_indent = true
+
+# extra mult display 2
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''if specific_vars and _c.name ~= 'Stone Card' and specific_vars.nominal_chips then
+            localize{type = 'other', key = 'card_chips', nodes = desc_nodes, vars = {specific_vars.nominal_chips}}
+end'''
+position = 'after'
+payload = '''if specific_vars and specific_vars.perma_mult and specific_vars.perma_mult > 0 then
+    localize{type = 'other', key = 'card_extra_mult', nodes = desc_nodes, vars = {specific_vars.perma_mult}}
+end
+if specific_vars and specific_vars.perma_dollars and specific_vars.perma_dollars > 0 then
+    localize{type = 'other', key = 'card_extra_dollars', nodes = desc_nodes, vars = {specific_vars.perma_dollars}}
+end
+if specific_vars and specific_vars.perma_xmult and specific_vars.perma_xmult ~= 1 then
+    localize{type = 'other', key = 'card_extra_xmult', nodes = desc_nodes, vars = {specific_vars.perma_xmult}}
+end
+'''
+match_indent = true
+
+# extra mult display 3
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''bonus_chips = (self.ability.bonus + (self.ability.perma_bonus or 0)) > 0 and (self.ability.bonus + (self.ability.perma_bonus or 0)) or nil,'''
+position = 'after'
+payload = '''perma_mult = self.ability.perma_mult or nil,
+perma_dollars = self.ability.perma_dollars or nil,
+perma_xmult = (self.ability.perma_xmult and self.ability.perma_xmult + 1) or nil,'''
+match_indent = true
+
+# act unhighlighted on discard
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '-- context.remove_playing_cards from discard'
+position = 'before'
+payload = '''for i, card in ipairs(BALIATRO.collect_hand_unhighlighted()) do
+    local removed = false
+    local effects = {}
+    SMODS.calculate_context({other_discarded = true, other_card = card, full_hand = G.hand.highlighted}, effects)
+    SMODS.trigger_effects(effects)
+    for _, eval in pairs(effects) do
+        if type(eval) == 'table' then
+            for key, eval2 in pairs(eval) do
+                if key == 'remove' or (type(eval2) == 'table' and eval2.remove) then removed = true end
+            end
+        end
+    end
+    if removed then
+        destroyed_cards[#destroyed_cards + 1] = card
+        if SMODS.has_enhancement(card, 'm_glass') then
+            card:shatter()
+        else
+            card:start_dissolve()
+        end
+    end
+end
+'''
+match_indent = true
 
 # booster pack cards boost
 # [[patches]]

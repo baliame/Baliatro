@@ -26,29 +26,14 @@ SMODS.calculate_individual_effect = function(effect, scored_card, key, amount, f
     end
 end
 
-BALIATRO.any_suit_jokers = {}
-
-function BALIATRO.add_any_suit_joker(joker)
-    table.insert(BALIATRO.any_suit_jokers, joker)
-end
-
-function BALIATRO.remove_any_suit_joker(joker)
-    local idx = nil
-    for i, other in ipairs(BALIATRO.any_suit_jokers) do
-        if other == joker then idx = i; break end
-    end
-    if idx then
-        table.remove(BALIATRO.any_suit_jokers, idx)
-    end
-end
-
 local shas = SMODS.has_any_suit
 
 SMODS.has_any_suit = function (card)
     local any_suit = shas(card)
     if any_suit then return any_suit end
-    for _, joker in ipairs(BALIATRO.any_suit_jokers) do
-        if joker.config.center:card_has_any_suit(joker, card) then
+    for _, joker in ipairs(G.jokers.cards) do
+        local center = joker.config.center
+        if joker.ability.extra and type(joker.ability.extra) == 'table' and center.card_has_any_suit and type(center.card_has_any_suit) == 'function' and center:card_has_any_suit(joker, card) then
             return true
         end
     end
@@ -143,6 +128,52 @@ SMODS.Rarity:take_ownership('Legendary', {
 --SMODS.Booster.update_pack = function(self)
 --
 --end
+
+local scc = SMODS.calculate_context
+SMODS.calculate_context = function(context, return_table)
+    scc(context, return_table)
+    if context.setting_blind then
+        BALIATRO.setting_blind()
+    end
+    if context.pre_discard then
+        local b = G.GAME.blind
+        if b and b.config and b.config.blind and b.config.blind.pre_discard and type(b.config.blind.pre_discard) == 'function' then
+            b.config.blind:pre_discard(context)
+        end
+    end
+    if context.discard and context.other_card then
+        context.other_card.ability.discarded_this_ante = true
+    end
+    if context.end_of_round then
+        BALIATRO.end_of_round()
+    end
+    if context.after then
+        local b = G.GAME.blind
+        if b and b.config and b.config.blind and b.config.blind.after_play and type(b.config.blind.after_play) == 'function' then
+            b.config.blind:after_play(context)
+        end
+    end
+end
+
+local scms = SMODS.calculate_main_scoring
+
+SMODS.calculate_main_scoring = function(context, scoring_hand)
+    local ret = scms(context, scoring_hand)
+    for _, card in ipairs(scoring_hand or context.cardarea.cards) do
+        card.ability.played_this_round = true
+    end
+    return ret
+end
+
+SMODS.has_no_suit = function(card)
+    local has_no_suit = false
+    local has_any_suit = SMODS.has_any_suit(card)
+    card.extra_enhancements = nil
+    for k, _ in pairs(SMODS.get_enhancements(card)) do
+        if k == 'm_stone' or G.P_CENTERS[k].no_suit then has_no_suit = true end
+    end
+    return has_no_suit and not has_any_suit
+end
 
 return {
     name = 'Baliatro SMODS Overrides'

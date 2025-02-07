@@ -12,7 +12,7 @@ SMODS.Booster:take_ownership('p_celestial_mega_2', {config = {extra = 6, choose 
 SMODS.Consumable {
     set = 'Planet',
     key = 'luna',
-    config = { target="baliatro_interest", v1 = 0.05, v2 = 2, initial_v1 = 1, initial_v2 = 25, moon = true},
+    config = { target="baliatro_interest", v1 = 0.03, v2 = 2, initial_v1 = 1, initial_v2 = 25, moon = true},
     pos = {x = 1, y = 0 },
     atlas = 'BaliatroPlanets',
     can_appear = function(self)

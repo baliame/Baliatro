@@ -22,7 +22,7 @@ BALIATRO.JokerUpgrade = {
     ["j_raised_fist"] = "j_baliatro_union_joker",
     ["j_chaos"] = "j_baliatro_chaos_with_crown",
     ["j_scary_face"] = "j_sock_and_buskin",
-    ["j_abstract_joker"] = "j_baliatro_stencil_joker",
+    ["j_abstract"] = "j_baliatro_stencil_joker",
     ["j_delayed_grat"] = "j_to_the_moon",
     ["j_gros_michel"] = "j_cavendish",
     ["j_even_steven"] = "j_baliatro_multiple_of_two_lou",
@@ -147,7 +147,7 @@ SMODS.Consumable:take_ownership('c_death', {
         local h = #G.hand.highlighted
         if h > card.ability.consumeable.max_highlighted or h < card.ability.consumeable.min_highlighted then return false end
         for _, card in ipairs(G.hand.highlighted) do
-            if card.ability.baliatro_immortal then
+            if BALIATRO.is_immortal(card) then
                 return false
             end
         end
@@ -160,7 +160,7 @@ SMODS.Consumable:take_ownership('c_cryptid', {
         local h = #G.hand.highlighted
         if h > card.ability.consumeable.max_highlighted or h == 0 then return false end
         for _, card in ipairs(G.hand.highlighted) do
-            if card.ability.baliatro_immortal then
+            if BALIATRO.is_immortal(card) then
                 return false
             end
         end
@@ -172,8 +172,8 @@ SMODS.Joker:take_ownership('j_dna', {
     calculate = function(self, card, context)
         if context.first_hand_drawn and not context.blueprint then
             local eval = function() return G.GAME.current_round.hands_played == 0 end
-            juice_card_until(self, eval, true)
-        elseif context.before and context.cardarea == G.jokers and not context.individual and G.GAME.current_round.hands_played == 0 and #context.full_hand == 1 and not context.full_hand[1].ability.baliatro_immortal then
+            juice_card_until(card, eval, true)
+        elseif context.before and context.cardarea == G.jokers and not context.individual and G.GAME.current_round.hands_played == 0 and #context.full_hand == 1 and not BALIATRO.is_immortal(context.full_hand[1]) then
             G.playing_card = (G.playing_card and G.playing_card + 1) or 1
             local _card = copy_card(context.full_hand[1], nil, nil, G.playing_card)
             _card:add_to_deck()
@@ -191,7 +191,7 @@ SMODS.Joker:take_ownership('j_dna', {
             return {
                 message = localize('k_copied_ex'),
                 colour = G.C.CHIPS,
-                card = self,
+                card = card,
                 playing_cards_created = {true}
             }
         end
@@ -297,6 +297,12 @@ SMODS.Joker:take_ownership('j_midas_mask', {
         end
     end
 })
+
+local bdc = Blind.debuff_card
+Blind.debuff_card = function(self, card, from_blind)
+    if card.ability.cannot_be_debuffed then card:set_debuff(false); return end
+    bdc(self, card, from_blind)
+end
 
 return {
     name = 'Baliatro Center Overrides'
