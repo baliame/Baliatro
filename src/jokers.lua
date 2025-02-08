@@ -201,7 +201,7 @@ SMODS.Joker {
                     if ed:find("faded_") then
                         ed = ed:gsub("faded_", "")
                     end
-                    local up_ed = "baliatro_"..k
+                    local up_ed = "baliatro_"..ed
                     if G.GAME.spec_planets[up_ed] then
                         editions[ed] = true
                         scored_card.sharpened = true

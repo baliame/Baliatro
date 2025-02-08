@@ -22,6 +22,10 @@ SMODS.Booster {
 	loc_vars = BALIATRO.booster_pack_locvars,
 	group_key = "k_baliatro_upgraded_buffoon_pack",
     set_ability = BALIATRO.booster_pack_set_ability,
+
+    in_pool = function(self)
+        return G.GAME.round_resets.ante >= 4
+    end
 }
 
 -- 1. Jimbo

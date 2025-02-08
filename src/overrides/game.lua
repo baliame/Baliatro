@@ -1,6 +1,6 @@
 local gigo = G.init_game_object
-G.init_game_object = function()
-    local ret = gigo()
+G.init_game_object = function(self)
+    local ret = gigo(self)
     ret.spec_planets = {}
     for k, v in pairs(G.P_CENTERS) do
         if v.set == "Planet" and v.config.target then
