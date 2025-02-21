@@ -159,8 +159,10 @@ local scms = SMODS.calculate_main_scoring
 
 SMODS.calculate_main_scoring = function(context, scoring_hand)
     local ret = scms(context, scoring_hand)
-    for _, card in ipairs(scoring_hand or context.cardarea.cards) do
-        card.ability.played_this_round = true
+    if context.cardarea == G.play then
+        for _, card in ipairs(scoring_hand or context.cardarea.cards) do
+            card.ability.played_this_round = true
+        end
     end
     return ret
 end
@@ -174,6 +176,35 @@ SMODS.has_no_suit = function(card)
     end
     return has_no_suit and not has_any_suit
 end
+
+local segui = SMODS.Enhancement.generate_ui
+SMODS.Enhancement.generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
+    segui(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
+    if specific_vars then
+        if specific_vars.perma_mult and specific_vars.perma_mult > 0 then
+            localize{type = 'other', key = 'card_extra_mult', nodes = desc_nodes, vars = {specific_vars.perma_mult}}
+        end
+        if specific_vars.perma_dollars and specific_vars.perma_dollars > 0 then
+            localize{type = 'other', key = 'card_extra_dollars', nodes = desc_nodes, vars = {specific_vars.perma_dollars}}
+        end
+        if specific_vars.perma_xmult and specific_vars.perma_xmult ~= 1 then
+            localize{type = 'other', key = 'card_extra_xmult', nodes = desc_nodes, vars = {specific_vars.perma_xmult}}
+        end
+    end
+end
+
+local sas = SMODS.always_scores
+SMODS.always_scores = function(card)
+    local ret = sas(card)
+    for i, joker in ipairs(G.jokers.cards) do
+        if not joker.debuff and joker.config.center.always_score_card and type(joker.config.center.always_score_card) == 'function' then
+            ret = ret or joker.config.center:always_score_card(joker, card)
+        end
+    end
+    return ret
+end
+
+SMODS.optional_features.cardareas.unscored = true
 
 return {
     name = 'Baliatro SMODS Overrides'

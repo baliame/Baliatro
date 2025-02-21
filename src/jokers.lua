@@ -198,8 +198,8 @@ SMODS.Joker {
                 local scored_card = context.scoring_hand[i]
                 if scored_card.edition and not scored_card.sharpened then
                     local ed = scored_card.edition.type
-                    if ed:find("faded_") then
-                        ed = ed:gsub("faded_", "")
+                    if ed:find("baliatro_faded_") then
+                        ed = ed:gsub("baliatro_faded_", "")
                     end
                     local up_ed = "baliatro_"..ed
                     if G.GAME.spec_planets[up_ed] then
@@ -568,8 +568,8 @@ SMODS.Joker {
     name = "Parade",
     key = "parade",
     pos = {
-        x = 0,
-        y = 0,
+        x = 4,
+        y = 1,
     },
     config = {
         extra = {
@@ -613,18 +613,18 @@ SMODS.Joker {
 }
 
 -- 9.
--- Editionless Wild Cards gain Polychrome when scored. 1 in 4 chance for added Polychrome not to be faded. Double the required score for Blind for each Polychrome card in each scoring hand.
+-- Editionless Wild Cards gain Polychrome when scored. 1 in 2 chance for added Polychrome not to be faded. Double the required score for Blind for each Polychrome card in each scoring hand.
 -- Uncommon
 SMODS.Joker {
     name = "Fool's Gambit",
     key = "fools_gambit",
     pos = {
-        x = 0,
-        y = 0,
+        x = 5,
+        y = 1,
     },
     config = {
         extra = {
-            odds = 4,
+            odds = 2,
         }
     },
 
@@ -690,8 +690,8 @@ SMODS.Joker {
     name = "Slot Machine",
     key = "slot_machine",
     pos = {
-        x = 0,
-        y = 0,
+        x = 6,
+        y = 1,
     },
     config = {
         extra = {
@@ -724,7 +724,6 @@ SMODS.Joker {
     calculate = function(self, card, context)
         if context.pre_discard and not context.individual then
             local text, disp_text = G.FUNCS.get_poker_hand_info(G.hand.highlighted)
-            print('Discarded hand:', text, '- slot machine hand:', card.ability.extra.hand)
             if text == card.ability.extra.hand then
                 card_eval_status_text(context.blueprint_card or card, 'extra', nil, nil, nil, {message = localize{type = 'variable', key = 'a_baliatro_money', vars={card.ability.extra.dollars}}})
                 ease_dollars(card.ability.extra.dollars)
@@ -812,8 +811,8 @@ SMODS.Joker {
     name = "Gacha Joker",
     key = "gacha",
     pos = {
-        x = 0,
-        y = 0,
+        x = 7,
+        y = 1,
     },
     config = {
         extra = {
@@ -850,6 +849,7 @@ SMODS.Joker {
 
     calculate = function(self, card, context)
         if context.first_hand_drawn then
+            local scorer = context.blueprint_card or card
             G.E_MANAGER:add_event(Event({func = function()
                 local _card = create_playing_card({front = pseudorandom_element(G.P_CARDS, pseudoseed('gacha')), center = G.P_CENTERS.c_base}, G.hand, nil, nil, {G.C.SECONDARY_SET.Enhanced})
 
@@ -867,7 +867,7 @@ SMODS.Joker {
                 _card:set_edition{[ed] = true}
                 G.GAME.blind:debuff_card(_card)
                 G.hand:sort()
-                if context.blueprint_card then context.blueprint_card:juice_up() else card:juice_up() end
+                scorer:juice_up()
                 return true
             end }))
             playing_card_joker_effects({true})
@@ -897,8 +897,8 @@ SMODS.Joker {
     name = "Daytrader",
     key = "daytrader",
     pos = {
-        x = 0,
-        y = 0,
+        x = 8,
+        y = 1,
     },
     config = {
         extra = {
@@ -960,8 +960,8 @@ SMODS.Joker {
     name = "Gallows Humour",
     key = "gallows_humour",
     pos = {
-        x = 0,
-        y = 0,
+        x = 9,
+        y = 1,
     },
     config = {
         extra = {
@@ -1020,9 +1020,9 @@ SMODS.Joker {
                 mult_mod = card.ability.extra.mult
             }
         --elseif context.destroying_unscored_card and context.destroying_unscored_card == card.ability.extra.destroyed then
-        elseif context.cardarea == BALIATRO.unscored_cardarea and context.destroy_card == card.ability.extra.destroyed then
+        elseif context.cardarea == 'unscored' and card.ability.extra.destroyed and context.destroy_card == card.ability.extra.destroyed then
             card.ability.extra.destroyed = nil
-            return true
+            return {remove = true}
         elseif context.end_of_round and not context.blueprint and not context.repetition and not context.individual then
             local added_card = false
             if card.ability.extra.can_activate then
@@ -1050,7 +1050,7 @@ SMODS.Joker {
     key = "killing_joke",
     pos = {
         x = 0,
-        y = 0,
+        y = 2,
     },
     config = {
         extra = {
@@ -1137,8 +1137,8 @@ SMODS.Joker {
     name = "Tempered Joker",
     key = "tempered_joker",
     pos = {
-        x = 0,
-        y = 0,
+        x = 1,
+        y = 2,
     },
     config = {
         extra = {
@@ -1214,8 +1214,8 @@ SMODS.Joker {
     name = "Tax Collector",
     key = "tax_collector",
     pos = {
-        x = 0,
-        y = 0,
+        x = 2,
+        y = 2,
     },
     config = {
         extra = {
@@ -1318,8 +1318,8 @@ SMODS.Joker {
     name = "Display Case",
     key = "display_case",
     pos = {
-        x = 0,
-        y = 0,
+        x = 3,
+        y = 2,
     },
     config = {
         extra = {
@@ -1407,11 +1407,12 @@ SMODS.Joker {
 
     loc_vars = function(self, info_queue, card)
         info_queue[#info_queue+1] = G.P_CENTERS["e_negative"]
+        info_queue[#info_queue+1] = G.P_CENTERS["e_baliatro_ephemeral"]
         return {vars={}}
     end,
 
     calculate = function(self, card, context)
-        if context.using_consumeable and not (context.consumeable.edition and context.consumeable.edition.negative) and not (context.consumeable.config.center.hidden or context.consumeable.config.center.rarity == 4) and not context.blueprint then
+        if context.using_consumeable and not (context.consumeable.edition and (context.consumeable.edition.negative or context.consumeable.edition.ephemeral)) and not (context.consumeable.config.center.hidden or context.consumeable.config.center.rarity == 4) and not context.blueprint then
             G.E_MANAGER:add_event(Event({func = function()
                 local copy = copy_card(context.consumeable)
                 copy:set_edition({negative = true}, true)
@@ -1557,7 +1558,6 @@ SMODS.Joker {
         if context.joker_main then
             return {
                 xmult = card.ability.extra.xmult,
-                message = localize{type = 'variable', key = 'a_xmult', vars = {card.ability.extra.xmult}},
             }
         elseif context.reroll_shop and not context.blueprint then
             card.ability.extra.xmult = card.ability.extra.xmult - card.ability.extra.reroll_cost
@@ -1625,6 +1625,7 @@ SMODS.Joker {
     calculate = function(self, card, context)
         local scorer = context.blueprint_card or card
         if context.before and context.cardarea == G.jokers and not context.blueprint then
+            --local rem = card.ability.extra.retriggers + (5 - #context.full_hand)
             local rem = card.ability.extra.retriggers
             local cards = 0
             local reps = {}
@@ -1982,7 +1983,7 @@ SMODS.Joker {
 
     config = {
         extra = {
-            mult = 2,
+            mult = 1,
         },
     },
 
@@ -2188,7 +2189,6 @@ SMODS.Joker {
             local msr = BALIATRO.most_scored_rank_scores()
             local lph = BALIATRO.least_played_hand_times()
             local mph = BALIATRO.most_played_hand_times()
-            print('lsr ', lsr, ' msr ', msr, ' lph ', lph, ' mph ', mph)
             local contains_lsr = false
             local contains_msr = false
             local contains_lph = false
@@ -2196,14 +2196,10 @@ SMODS.Joker {
 
             if G.GAME.hands[context.scoring_name].played == lph  or G.GAME.hands[context.scoring_name].played == lph + 1 then contains_lph = true end
             if G.GAME.hands[context.scoring_name].played == mph then contains_mph = true end
-            print('hand played ', G.GAME.hands[context.scoring_name].played)
             for k, v in ipairs(context.scoring_hand) do
-                print('rank ', v.base.value, ' scored ', G.GAME.ranks_scored[v.base.value])
                 if G.GAME.ranks_scored[v.base.value] == lsr then contains_lsr = true end
                 if G.GAME.ranks_scored[v.base.value] == msr then contains_msr = true end
             end
-            print('has lph: ', contains_lph, ', has mph: ', contains_mph)
-            print('has lsr: ', contains_lsr, ', has msr: ', contains_msr)
 
             if (contains_lsr and contains_mph) or (contains_msr and contains_lph) then
                 card.ability.extra.xmult = card.ability.extra.xmult + card.ability.extra.xmult_gain
@@ -2367,6 +2363,9 @@ SMODS.Joker {
         y = 0,
     },
     config = {
+        extra = {
+            odds = 2,
+        }
     },
 
     new_york = {
@@ -2381,9 +2380,13 @@ SMODS.Joker {
     rarity = 1,
     atlas = "Baliatro",
 
+    loc_vars = function(self, info_queue, card)
+        return {vars = {(G.GAME and G.GAME.probabilities.normal) or 1, card.ability.extra.odds}}
+    end,
+
     calculate = function(self, card, context)
 
-        if context.individual and context.cardarea == G.play and not context.repetition then
+        if context.individual and context.cardarea == G.play and not context.repetition and pseudorandom('bodybuilder') < G.GAME.probabilities.normal / card.ability.extra.odds then
             local oc = context.other_card
             G.E_MANAGER:add_event(Event({
                 trigger = 'after',
@@ -2412,7 +2415,6 @@ SMODS.Joker {
             return {
                 message = localize('k_upgrade_ex'),
                 card = context.blueprint_card or card,
-                chips = -context.other_card.base.nominal,
             }
         end
     end
@@ -2700,7 +2702,7 @@ SMODS.Joker {
         extra = {
             retriggers = 1,
             bonus = 0.05,
-            created_amt = 1,
+            created_amt = 2,
             created_set = 'Tarot',
             created_card = 'c_tower',
 
@@ -2851,17 +2853,35 @@ SMODS.Joker {
         local scorer = context.blueprint_card or card
         --v:set_ability(G.P_CENTERS.c_base, nil, true)
         if context.before then
+            if #context.scoring_hand < 2 then
+                return
+            end
+
             for i, other in ipairs(context.scoring_hand) do
                 if not other.debuff and other.ability.set == 'Enhanced' then
-                    local enh = G.P_CENTERS[other.config.center.key]
-                    other:set_ability(G.P_CENTERS.c_base, nil, true)
+                    local e_key = other.config.center.key
+                    local enh = G.P_CENTERS[e_key]
+                    local pointless = true
                     if i > 1 then
                         local prev = context.scoring_hand[i-1]
-                        prev:set_ability(enh, nil, true)
+                        if prev.ability.set ~= 'Enhanced' or prev.config.center.key ~= e_key then pointless = false end
                     end
+
                     if i < #context.scoring_hand then
                         local next = context.scoring_hand[i+1]
-                        next:set_ability(enh, nil, true)
+                        if next.ability.set ~= 'Enhanced' or next.config.center.key ~= e_key then pointless = false end
+                    end
+
+                    if not pointless then
+                        other:set_ability(G.P_CENTERS.c_base, nil, true)
+                        if i > 1 then
+                            local prev = context.scoring_hand[i-1]
+                            prev:set_ability(enh, nil, true)
+                        end
+                        if i < #context.scoring_hand then
+                            local next = context.scoring_hand[i+1]
+                            next:set_ability(enh, nil, true)
+                        end
                     end
                     break
                 end
@@ -2870,6 +2890,19 @@ SMODS.Joker {
             for i, other in ipairs(context.scoring_hand) do
                 if not other.debuff and other.seal then
                     local seal = other:get_seal()
+                    local pointless = true
+                    if i > 1 then
+                        local prev = context.scoring_hand[i-1]
+                        if prev:get_seal() ~= seal then pointless = false end
+                    end
+
+                    if i < #context.scoring_hand then
+                        local next = context.scoring_hand[i+1]
+                        if next:get_seal() ~= seal then pointless = false end
+                    end
+
+                    if pointless then return end
+
                     other:set_seal(nil)
                     if i > 1 then
                         local prev = context.scoring_hand[i-1]
@@ -3039,8 +3072,8 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 6,
+        y = 2,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -3083,14 +3116,14 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 5,
+        y = 2,
     },
     unlocked = true,
     blueprint_compat = true,
     eternal_compat = true,
     perishable_compat = true,
-    cost = 7,
+    cost = 4,
     rarity = 1,
     atlas = "Baliatro",
 
@@ -3122,6 +3155,70 @@ SMODS.Joker {
     end
 }
 
+-- 67. Lesser Demon
+-- If played hand is a Three of a Kind of 6es, create 2 Devil.
+-- Uncommon
+SMODS.Joker {
+    name = "Lesser Demon",
+    key = "lesser_demon",
+    pos = {
+        x = 4,
+        y = 2,
+    },
+    config = {
+        extra = {
+            created_amount = 2,
+            created_card = "c_devil",
+            created_type = "Tarot",
+        }
+    },
+
+    new_york = {
+        compatible = true,
+    },
+
+    unlocked = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 5,
+    rarity = 2,
+    atlas = "Baliatro",
+
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = G.P_CENTERS['c_devil']
+        return {vars = {card.ability.extra.created_amount}}
+    end,
+
+    calculate = function(self, card, context)
+
+        if context.before and context.scoring_name == "Three of a Kind" and #context.full_hand == 3 and context.scoring_hand[1].base.value == '6' then
+            local created_amt = math.min(G.consumeables.config.card_limit - (#G.consumeables.cards + G.GAME.consumeable_buffer), card.ability.extra.created_amount)
+            if created_amt > 0 then
+                G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + created_amt
+                local ctype = card.ability.extra.created_type
+                local ccard = card.ability.extra.created_card
+                G.E_MANAGER:add_event(Event({
+                    trigger = 'before',
+                    delay = 0.0,
+                    func = (function()
+                        for j = 1, created_amt do
+                            local card = create_card(ctype, G.consumeables, nil, nil, nil, nil, ccard, "romeo")
+                            card:add_to_deck()
+                            G.consumeables:emplace(card)
+                            G.GAME.consumeable_buffer = 0
+                        end
+                        return true
+                    end)}))
+                return {
+                    message = localize('k_plus_tarot'),
+                    card = context.blueprint_card or card,
+                    colour = G.C.SECONDARY_SET.Tarot,
+                }
+            end
+        end
+    end
+}
 
 return {
     name = "Baliatro Jokers",

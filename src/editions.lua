@@ -256,8 +256,7 @@ SMODS.Edition {
             local ed_level = G.GAME.spec_planets["baliatro_photographic"]
             local mult = ed_level.c_v1
 
-            local augmented = false
-            local trigger_keys = {'chips', 'h_chips', 'chip_mod', 'mult', 'h_mult', 'mult_mod', 'x_mult', 'Xmult', 'xmult', 'x_mult_mod', 'Xmult_mod', 'p_dollars', 'dollars', 'h_dollars', 'level_up', 'repetitions'}        local valid = false
+            local trigger_keys = {'chips', 'h_chips', 'chip_mod', 'mult', 'h_mult', 'mult_mod', 'x_mult', 'Xmult', 'xmult', 'x_mult_mod', 'Xmult_mod', 'p_dollars', 'dollars', 'h_dollars', 'level_up', 'repetitions'}
             local xmod_keys = {'x_mult', 'Xmult', 'xmult', 'x_mult_mod', 'Xmult_mod'}
 
             for i, key in ipairs(trigger_keys) do
@@ -273,13 +272,12 @@ SMODS.Edition {
                     if not is_xmult then
                         o[key] = math.floor(o[key])
                     end
-                    if o.message then
-                        o.message = localize{type='variable', key='a_baliatro_augment_photographic', vars={o.message}}
-                    else
-                        o.message = localize('k_baliatro_augment_photographic')
-                    end
-                    augmented = true
-                    break
+                    --if o.message then
+                    --    o.message = localize{type='variable', key='a_baliatro_augment_photographic', vars={o.message}}
+                    --else
+                    --    o.message = localize('k_baliatro_augment_photographic')
+                    --end
+                    --break
                 end
             end
         end
@@ -310,7 +308,7 @@ SMODS.Edition {
     config = {
         extra = {
             chips = 0,
-            add_chips = 5,
+            add_chips = 2,
             increase = 1.04,
             reduction = 0.001,
         }
@@ -338,7 +336,7 @@ SMODS.Edition {
     end,
 
     augment = function(self, card, context, o, t)
-        if context.check_enhancement or not(context.edition or context.individual or context.main_scoring or context.repetition or context.joker_main) or not o then return o, t end
+        if context.check_enhancement or not(context.edition or context.individual or context.main_scoring or context.repetition or context.joker_main or context.end_of_round) or not o then return o, t end
         local trigger_keys = {'chips', 'h_chips', 'chip_mod', 'mult', 'h_mult', 'mult_mod', 'x_mult', 'Xmult', 'xmult', 'x_mult_mod', 'Xmult_mod', 'p_dollars', 'dollars', 'h_dollars', 'level_up', 'repetitions'}        local valid = false
         for i, tk in ipairs(trigger_keys) do
             if o[tk] then
@@ -361,6 +359,7 @@ SMODS.Edition {
 
     calculate = function(self, card, context)
         if (context.cardarea == G.jokers and context.edition and context.pre_joker) or (context.cardarea == G.play and context.main_scoring) and card.edition.extra.chips ~= 0 then
+            self:augment(card, context, {chips = card.edition.extra.chips})
             return {
                 chip_mod = card.edition.extra.chips
             }
@@ -403,6 +402,7 @@ SMODS.Edition {
     sound = { sound = 'baliatro_bell', per=1.0, vol=0.8 },
 
     loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = G.P_CENTERS['e_baliatro_ephemeral']
         info_queue[#info_queue+1] = G.P_CENTERS['e_baliatro_ectoplasmic']
         info_queue[#info_queue+1] = {key='baliatro_immortal', set='Other'}
         return {vars={self.config.extra.created_amt, (G.GAME and G.GAME.probabilities.normal) or 1, self.config.extra.destroy_odds}}
@@ -412,7 +412,7 @@ SMODS.Edition {
         if context.cardarea == G.play and context.main_scoring then
             local card_type, colour, plus_string = BALIATRO.simple_neg_consumable('haunted')
             return {
-                extra = BALIATRO.extra_create_card(card.edition.extra.created_amt, true, card, plus_string, card_type, 'haunted'),
+                extra = BALIATRO.extra_create_card(card.edition.extra.created_amt, true, card, plus_string, card_type, 'haunted', 'e_baliatro_ephemeral'),
                 colour = colour,
                 card = card,
             }
@@ -495,6 +495,30 @@ SMODS.Edition {
         if (context.destroy_card and context.destroying_card == card) or (context.other_discarded and context.other_card == card and (not card.edition.created_on_discard or card.edition.created_on_discard ~= G.GAME.current_round.discards_used)) then
             return {remove = true}
         end
+    end,
+}
+
+SMODS.Edition {
+    name = "Ephemeral",
+    key = "ephemeral",
+    unlocked = true,
+    in_shop = false,
+    weight = 3,
+    extra_cost = 0,
+    apply_to_float = true,
+    shader = "ectoplasmic",
+    config = {
+        card_limit = 1,
+        extra = {
+            ttl = 3,
+        }
+    },
+    sound = { sound = 'baliatro_bell', per=0.9, vol=0.6},
+    disable_base_shader = true,
+    disable_shadow = true,
+
+    loc_vars = function(self, info_queue, card)
+        return {vars={(card and card.edition and card.edition.card_limit) or self.config.card_limit, self.config.extra.ttl, (card and card.edition and card.edition.extra.ttl) or self.config.extra.ttl}}
     end,
 }
 

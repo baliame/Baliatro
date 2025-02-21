@@ -17,8 +17,8 @@ SMODS.Consumable {
     atlas = 'BaliatroPlanets',
     can_appear = function(self)
         -- artificially create scarcity over level 10
-        local top = math.max(0, G.GAME.spec_planets['baliatro_booster_pack_choices'].level - 10)
-        local bottom = math.max(1, G.GAME.spec_planets['baliatro_booster_pack_choices'].level - 8)
+        local top = math.max(0, G.GAME.spec_planets['baliatro_interest'].level - 10)
+        local bottom = math.max(1, G.GAME.spec_planets['baliatro_interest'].level - 8)
         return top == 0 or top / bottom < pseudorandom('luna_canappear')
     end,
     can_use = function(self, card)
@@ -78,11 +78,14 @@ SMODS.Consumable {
 SMODS.Consumable {
     set = 'Planet',
     key = 'io',
-    config = { softlock=true, target="baliatro_polychrome", v1 = 0.05, initial_v1 = 1.5, moon = true, spec_extra = { remult = 1, ever = false }},
+    config = { softlock=true, target="baliatro_polychrome", v1 = 0.02, initial_v1 = 1.5, moon = true, spec_extra = { remult = 1, ever = false }},
     pos = {x = 4, y = 0 },
     atlas = 'BaliatroPlanets',
     can_appear = function(self)
-        return G.GAME.spec_planets['baliatro_polychrome'].ever
+        if not G.GAME.spec_planets['baliatro_polychrome'].ever then return false end
+        local top = math.max(0, G.GAME.spec_planets['baliatro_polychrome'].level - 20)
+        local bottom = math.max(1, G.GAME.spec_planets['baliatro_polychrome'].level - 18)
+        return top == 0 or top / bottom < pseudorandom('io_canappear')
     end,
     can_use = function(self, card)
         return true
@@ -103,7 +106,10 @@ SMODS.Consumable {
     pos = {x = 5, y = 0 },
     atlas = 'BaliatroPlanets',
     can_appear = function(self)
-        return G.GAME.spec_planets['baliatro_photographic'].ever
+        if not G.GAME.spec_planets['baliatro_photographic'].ever then return false end
+        local top = math.max(0, G.GAME.spec_planets['baliatro_photographic'].level - 10)
+        local bottom = math.max(1, G.GAME.spec_planets['baliatro_photographic'].level - 8)
+        return top == 0 or top / bottom < pseudorandom('io_canappear')
     end,
     can_use = function(self, card)
         return true

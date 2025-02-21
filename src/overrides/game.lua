@@ -23,13 +23,14 @@ G.init_game_object = function(self)
     ret.interest_basis_modifier = 0
     ret.current_round.booster_rerolls = 0
     ret.current_round.effigy_card = {rank = 'Ace', id = 14}
-    ret.mortgage_rate = 20
+    ret.mortgage_rate = 15
     ret.shop_booster_packs = 2
     ret.edition_rate = 1.6
     ret.voucher_limit = 1
     ret.current_round.shop_vouchers = {}
     ret.ranks_scored = {}
     ret.real_estate = 1.5
+    ret.pack_upgrade_chance = 0
     for _, rank in pairs(SMODS.Ranks) do
         ret.ranks_scored[rank.key] = 0
     end

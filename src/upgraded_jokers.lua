@@ -970,7 +970,7 @@ SMODS.Joker {
     key = "aceology_phd",
     config = {
         extra = {
-            xmult = 4,
+            xmult = 2,
             chips_mult = 1,
             target = nil
         }
@@ -1458,4 +1458,84 @@ SMODS.Joker {
             }
         end
     end
+}
+
+-- 31. Labradorite
+-- Played cards with Club suit permanently gain X0.02 Mult when scored.
+SMODS.Joker {
+    name = "Labradorite",
+    key = "labradorite",
+    config = {
+        extra = {
+            x_mult_gain = 0.02,
+        }
+    },
+    pos = {
+        x = 9,
+        y = 2,
+    },
+    unlocked = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 6,
+    rarity = "baliatro_upgraded",
+    atlas = "BaliatroUp",
+
+    new_york = {
+        compatible = true,
+    },
+
+    loc_vars = function(self, info_queue, card)
+        return {vars={card.ability.extra.x_mult_gain}}
+    end,
+
+    calculate = function(self, card, context)
+        if context.cardarea == G.play and context.individual and context.other_card and context.other_card:is_suit('Clubs')  then
+            context.other_card.ability.perma_xmult = context.other_card.ability.perma_xmult + card.ability.extra.x_mult_gain
+            return {
+                message = localize("k_upgrade_ex"),
+                card = context.other_card,
+            }
+        end
+    end
+}
+
+-- 32.
+-- Every played card and the leftmost 5 cards held in hand count in scoring.
+SMODS.Joker {
+    name = "Splatter",
+    key = "splatter",
+    config = {
+        extra = {
+            extra_cards = 5
+        }
+    },
+    pos = {
+        x = 0,
+        y = 3,
+    },
+    unlocked = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 6,
+    rarity = "baliatro_upgraded",
+    atlas = "BaliatroUp",
+
+    new_york = {
+        compatible = true,
+    },
+
+    always_score_card = function(self, card, other)
+        return true
+    end,
+
+    additional_scoring_cards = function(self, card)
+        return card.ability.extra.extra_cards
+    end,
+
+    loc_vars = function(self, info_queue, card)
+        return {vars={card.ability.extra.extra_cards}}
+    end,
 }

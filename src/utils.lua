@@ -393,7 +393,7 @@ function BALIATRO.simple_neg_consumable(seed)
     return card_type, colour, plus_string
 end
 
-function BALIATRO.extra_create_card(amt, negative, card, plus_string, card_type, seed)
+function BALIATRO.extra_create_card(amt, negative, card, plus_string, card_type, seed, edition)
     local created_amt = amt
     if not negative then
         created_amt = math.min(amt, G.consumeables.config.card_limit - (#G.consumeables.cards + G.GAME.consumeable_buffer))
@@ -407,7 +407,9 @@ function BALIATRO.extra_create_card(amt, negative, card, plus_string, card_type,
             func = (function()
                 for i = 1, created_amt do
                     local l_card = create_card(card_type,G.consumeables, nil, nil, nil, nil, nil, seed)
-                    if negative then
+                    if edition then
+                        l_card:set_edition(edition, true)
+                    elseif negative then
                         l_card:set_edition({negative = true}, true)
                     end
                     l_card:add_to_deck()
@@ -460,6 +462,22 @@ function BALIATRO.end_of_round()
     for i, card in ipairs(ethereal) do
         card:remove_from_deck()
         card:start_dissolve(nil, true, nil, true)
+    end
+
+    for i, card in ipairs(G.consumeables.cards) do
+        if card.edition and card.edition.key == 'e_baliatro_ephemeral' then
+            card.edition.extra.ttl = card.edition.extra.ttl - 1
+            if card.edition.extra.ttl <= 0 then
+                card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize('k_baliatro_expired_ex')})
+                G.E_MANAGER:add_event(Event({trigger='after', delay=0.1, blockable=true, func=function()
+                    card:remove_from_deck()
+                    card:start_dissolve(nil, true, nil, true)
+                    return true
+                end}))
+            else
+                card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize{type='variable', key='a_remaining', vars={card.edition.extra.ttl}}})
+            end
+        end
     end
 
     for i, card in ipairs(G.playing_cards) do

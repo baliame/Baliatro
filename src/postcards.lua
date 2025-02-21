@@ -139,7 +139,7 @@ SMODS.Consumable {
 	pos = { x = 2, y = 0 },
     cost = 10,
     order = 2,
-    rarity = 2,
+    rarity = 3,
 
     loc_vars = function(self, info_queue, card)
         info_queue[#info_queue+1] = G.P_CENTERS.e_baliatro_photographic
@@ -178,7 +178,7 @@ SMODS.Consumable {
 	pos = { x = 3, y = 0 },
     cost = 10,
     order = 3,
-    rarity = 2,
+    rarity = 1,
 
     loc_vars = function(self, info_queue, card)
         info_queue[#info_queue+1] = G.P_CENTERS.e_baliatro_scenic
@@ -226,7 +226,6 @@ SMODS.Consumable {
 
     loc_vars = function(self, info_queue, card)
         info_queue[#info_queue+1] = {key='eternal', set='Other'}
-        info_queue[#info_queue+1] = {key='perishable', set='Other', vars = {G.GAME.perishable_rounds or 1, G.GAME.perishable_rounds}}
         info_queue[#info_queue+1] = {key='baliatro_mortgage', set='Other', vars={G.GAME.mortgage_rate or 15, 12}}
         return { vars = { (G.GAME and G.GAME.probabilities.normal) or 1, card.ability.consumeable.odds }}
     end,
@@ -270,11 +269,12 @@ SMODS.Consumable {
             end
         end
         joker:set_eternal(nil)
-        if pseudorandom('newyork') < G.GAME.probabilities.normal / card.ability.consumeable.odds then
-            joker:set_perishable(true)
-        else
-            joker:set_mortgage(true)
-        end
+        joker:set_mortgage(true)
+        --if pseudorandom('newyork') < G.GAME.probabilities.normal / card.ability.consumeable.odds then
+        --    joker:set_perishable(true)
+        --else
+        --    joker:set_mortgage(true)
+        --end
         used_tarot:juice_up(0.3, 0.5)
     end
 }
@@ -289,7 +289,7 @@ SMODS.Consumable {
 	pos = { x = 5, y = 0 },
     cost = 10,
     order = 5,
-    rarity = 2,
+    rarity = 1,
 
     loc_vars = function(self, info_queue, card)
         info_queue[#info_queue+1] = {key='eternal', set='Other'}
@@ -882,7 +882,7 @@ SMODS.Consumable {
 }
 
 -- 15. Cairo
--- Apply Eternal to up to 1 selected non-Perishable Joker.
+-- Apply Eternal to up to 1 selected non-Perishable Joker. Create 1 Ankh.
 SMODS.Consumable {
     set = "Postcard",
     key = "cairo",
@@ -893,13 +893,16 @@ SMODS.Consumable {
     order = 12,
     config = {
         max = 1,
+        created_amt = 1,
+        created_set = 'Spectral',
+        created_card = 'c_ankh',
     },
-    rarity = 1,
+    rarity = 2,
 
     loc_vars = function(self, info_queue, card)
         info_queue[#info_queue+1] = {key='perishable', set='Other', vars = {G.GAME.perishable_rounds or 1, G.GAME.perishable_rounds}}
         info_queue[#info_queue+1] = {key='eternal', set='Other', vars = {}}
-        return { vars = {card.ability.consumeable.max}}
+        return { vars = {card.ability.consumeable.max, card.ability.consumeable.created_amt}}
     end,
 
     can_use = function(self, card)
@@ -919,6 +922,7 @@ SMODS.Consumable {
         for _, joker in ipairs(G.jokers.highlighted) do
             joker:set_eternal(true)
         end
+        BALIATRO.guided_create_card(card.ability.consumeable.created_amt, card.ability.consumeable.created_set, card.ability.consumeable.created_card, 'cairo')
         used_tarot:juice_up()
     end
 }

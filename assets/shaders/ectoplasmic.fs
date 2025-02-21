@@ -83,7 +83,7 @@ vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords
 
     color = f * mix(tex.rgb, color, h);
 
-	return dissolve_mask(vec4(color, f * f * g * g * tex.a * 1.5), texture_coords, uv);
+	return dissolve_mask(vec4(color, f * f * g * g * tex.a * 2), texture_coords, uv);
 }
 
 vec4 dissolve_mask(vec4 tex, vec2 texture_coords, vec2 uv)

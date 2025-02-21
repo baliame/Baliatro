@@ -295,7 +295,7 @@ SMODS.Blind {
     dollars = 5,
 
     recalc_debuff = function(self, card, from_blind)
-        if card.base then
+        if card.base and not SMODS.has_no_rank(card) then
             return card.base.value == (card.base.nominal .. '')
         end
         return false

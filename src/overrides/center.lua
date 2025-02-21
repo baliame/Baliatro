@@ -3,7 +3,7 @@ BALIATRO.JokerUpgrade = {
     ["j_greedy_joker"] = "j_baliatro_moissanite",
     ["j_lusty_joker"] = "j_bloodstone",
     ["j_wrathful_joker"] = "j_baliatro_obsidian",
-    ["j_gluttenous_joker"] = "j_onyx_agate",
+    ["j_gluttenous_joker"] = "j_baliatro_labradorite",
     ["j_jolly"] = "j_duo",
     ["j_zany"] = "j_trio",
     ["j_mad"] = "j_baliatro_swing",
@@ -35,7 +35,7 @@ BALIATRO.JokerUpgrade = {
     ["j_egg"] = "j_bootstraps",
     ["j_runner"] = "j_baliatro_marathon_runner",
     ["j_ice_cream"] = "j_stuntman",
-    ["j_splash"] = "j_marble",
+    ["j_splash"] = "j_baliatro_splatter",
     ["j_blue_joker"] = "j_baliatro_indigo_joker",
     ["j_faceless_joker"] = "j_chicot",
     ["j_green_joker"] = "j_baliatro_turquoise_joker",
@@ -246,7 +246,7 @@ SMODS.Consumable:take_ownership('c_emperor', {
         end
         delay(0.6)
     end
-})
+}, true)
 
 SMODS.Consumable:take_ownership('c_high_priestess', {
     use = function(self, card, area, copier)
@@ -267,7 +267,7 @@ SMODS.Consumable:take_ownership('c_high_priestess', {
         end
         delay(0.6)
     end
-})
+}, true)
 
 SMODS.Joker:take_ownership('j_midas_mask', {
     calculate = function(self, card, context)
@@ -296,7 +296,13 @@ SMODS.Joker:take_ownership('j_midas_mask', {
             end
         end
     end
-})
+}, true)
+
+SMODS.Joker:take_ownership('j_hack', {
+    loc_vars = function(self, info_queue, card)
+        return {vars={card.ability.extra}}
+    end
+}, true)
 
 local bdc = Blind.debuff_card
 Blind.debuff_card = function(self, card, from_blind)

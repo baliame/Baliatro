@@ -125,7 +125,7 @@ return {
             e_baliatro_haunted = {
                 name = "Haunted",
                 text = {
-                    "Create #1# random {C:dark_edition}Negative{} {C:tarot}Tarot{},",
+                    "Create #1# random {C:dark_edition}Ephemeral{} {C:tarot}Tarot{},",
                     "{C:spectral}Spectral{}, {C:planet}Planet{} or {C:attention}Postcard{}",
                     "{C:green}#2# in #3#{} chance to {C:red}destroy{} this card.",
                     "Affected card is considered {C:attention}Immortal{}.",
@@ -148,6 +148,15 @@ return {
                     "Cannot be {C:red}discarded{}.",
                     "Destroyed after any hand is played",
                     "or after any card is discarded.",
+                }
+            },
+            e_baliatro_ephemeral = {
+                name = "Ephemeral",
+                text = {
+                    "{C:dark_edition}+#1#{} consumable slot",
+                    "Cannot be copied by {C:attention}Puck{}",
+                    "Destroyed after #2# rounds if unused",
+                    "{C:inactive}(#3# rounds remaining){}",
                 }
             },
             e_baliatro_faded_holo = {
@@ -225,8 +234,8 @@ return {
             j_baliatro_sharpening_stone = {
                 name = 'Sharpening Stone',
                 text = {
-                    '{C:mult}+#2#{} Mult. Remove the {C:dark_edition}Edition{} from',
-                    'scored playing cards (except {C:attention}Negative{}).',
+                    '{C:mult}+#2#{} Mult. Remove any upgradable',
+                    '{C:dark_edition}Edition{} from scored playing cards.',
                     'For each {C:attention}Edition{} type removed in a hand,',
                     'upgrade that edition by {C:attention}#1#{} level.',
                     'Gains {C:mult}+#3#{} Mult per edition removed.'
@@ -289,21 +298,20 @@ return {
             j_baliatro_undertaker = {
                 ['name'] = 'Undertaker',
                 ['text'] = {
-                    "If any discarded hand only",
-                    "contains one card, add {C:attention}#1#{}",
-                    "{C:dark_edition}Ethereal{} copies of that",
-                    "card to your hand.",
+                    "If any discarded hand only contains",
+                    "one card, add {C:attention}#1#{} {C:dark_edition}Ethereal{}",
+                    "copies of that card to your hand.",
                     "{C:inactive}(Ethereal overwrites existing edition){}",
                 }
             },
             j_baliatro_gacha = {
                 ['name'] = 'Gacha Joker',
                 ['text'] = {
-                    "When {C:attention}Blind{} is selected,",
-                    "add a random {C:red}playing card{} to your hand.",
+                    "When {C:attention}Blind{} is selected, add a ",
+                    "random {C:red}playing card{} to your hand.",
                     "Add {C:dark_edition}Polychrome{} ({C:attention}#1#%{}), {C:dark_edition}Holographic{} ({C:attention}#2#%{})",
-                    "or {C:dark_edition}Foil{} to this card. {C:green}#3# in #4# chance{} to add",
-                    "a {C:dark_edition}Faded{} variant instead.",
+                    "or {C:dark_edition}Foil{} to this card. {C:green}#3# in #4# chance{}",
+                    "to add a {C:dark_edition}Faded{} variant instead.",
                     "{C:mult}+#5#{} Mult when an {C:dark_edition}Edition{} card is scored."
                 },
             },
@@ -333,8 +341,7 @@ return {
                     '{C:mult}+#1#{} Mult.',
                     'If scored hand is {C:attention}Three of a Kind{}, convert',
                     'a random unscored card to an {C:attention}Immortal{} copy',
-                    'of a random scored card. ',
-                    'Gain {C:mult}+#2#{} Mult on trigger.',
+                    'of a random scored card. Gain {C:mult}+#2#{} Mult on trigger.',
                     '{C:inactive}(Once per round){}',
                 },
             },
@@ -342,8 +349,8 @@ return {
                 name = 'Tempered Joker',
                 text = {
                     'If scored hand is {C:attention}Four of a Kind{}, gain',
-                    '{C:money}dollars{} equal to the sell value of',
-                    'all your jokers up to {C:money}$#2#{}, rounded down.',
+                    '{C:money}dollars{} equal to the sell value of all',
+                    'your jokers up to {C:money}$#2#{}, rounded down.',
                     '{C:mult}+#1#{} Mult when this triggers.',
                     '{C:inactive}(Once per round){}',
                     '{C:inactive}(Currently {C:money}$#3#{C:inactive}){}',
@@ -353,8 +360,8 @@ return {
                 name = 'Tax Collector',
                 text = {
                     'Lose {C:money}$#2#{} per {C:blue}hand{} played.',
-                    'Gain {C:money}$#1#{} when each suit is',
-                    'scored for the first time in played hand.',
+                    'Gain {C:money}$#1#{} when each suit is scored',
+                    'for the first time in played hand.',
                     'A single card only counts as one suit.',
                 },
             },
@@ -409,18 +416,17 @@ return {
                 text = {
                     '{X:mult,C:white}X#1#{} Mult. Hands change after each hand played.',
                     'Gain {X:mult,C:white}X#2#{} Mult if played hand is {C:attention}#3#{}',
-                    'Otherwise lose {X:mult,C:white}X#4#{} Mult',
-                    'Gaining hand cannot be your most played hand',
+                    'Otherwise, lose {X:mult,C:white}X#4#{} Mult.',
+                    '{C:inactive}Gaining hand cannot be your most played hand{}',
                 },
             },
             j_baliatro_puck = {
                 name = 'Puck',
                 text = {
-                    'When any non-negative consumable is played, ',
-                    'create a {C:dark_edition}negative{} copy.',
+                    'When any non-negative, non-ephemeral consumable',
+                    'is played, create a {C:dark_edition}negative{} copy.',
                     'Does not work on legendary consumables:',
-                    '{C:spectral}Soul{}, {C:spectral}Transcendence{}, {C:planet}Black Hole{}',
-                    '{C:spectral}New York{}',
+                    '{C:spectral}Soul{}, {C:spectral}Transcendence{}, {C:planet}Black Hole{}, {C:spectral}New York{}',
                 },
             },
             j_baliatro_el_primo = {
@@ -439,8 +445,7 @@ return {
                     'when scored. {C:green}#1# in #2# chance{} for added',
                     '{C:dark_edition}Polychrome{} not to be faded.',
                     '{C:red}Double{} the required scored for current ',
-                    '{C:attention}Blind{} for each {C:dark_edition}Polychrome{}',
-                    'card in scoring hand.',
+                    '{C:attention}Blind{} for each {C:dark_edition}Polychrome{} card in scoring hand.',
                 },
             },
             j_baliatro_sevenfold_avenger = {
@@ -527,10 +532,10 @@ return {
             j_baliatro_bodybuilder = {
                 name = "Bodybuilder",
                 text = {
-                    '{C:attention}All{} scored cards become one rank',
-                    'higher when scored. Scored cards',
-                    'subtract {C:chips}Chips{} equal to',
-                    'the chip value of their old rank.',
+                    'All scored cards have',
+                    'a {C:green}#1# in #2# chance{}',
+                    'to become one rank',
+                    'higher when scored.',
                 },
             },
             j_baliatro_tug_of_war = {
@@ -594,11 +599,12 @@ return {
                 name = "En Passant",
                 text = {
                     'Before scoring, remove the {C:attention}Enhancement{}',
-                    'from the first scoring {C:attention}Enhanced{} card',
-                    'and give it to the two adjacent scoring cards,',
+                    'from the first scoring {C:attention}Enhanced{} card and',
+                    'give it to the two adjacent scoring cards,',
                     'then remove the {C:attention}Seal{} from the first',
                     'scoring {C:attention}Sealed{} card and give it to',
-                    'the two adjacent scoring cards.'
+                    'the two adjacent scoring cards.',
+                    '{C:inactive}(does not remove enhancement or seal if pointless){}'
                 },
             },
             j_baliatro_one_e_four = {
@@ -623,9 +629,9 @@ return {
             j_baliatro_real_estate = {
                 name = "Real Estate",
                 text = {
-                    "{X:mult,C:white}X#1#{} Mult. All current",
-                    "and future copies of this Joker gain",
-                    "{X:mult,C:white}+X#2#{} Mult each time",
+                    "{X:mult,C:white}X#1#{} Mult. All current and",
+                    "future copies of this Joker",
+                    "gain {X:mult,C:white}+X#2#{} Mult each time",
                     "this Joker is sold.",
                 },
             },
@@ -634,6 +640,15 @@ return {
                 text = {
                     "{X:mult,C:white}X#1#{} Mult.",
                     "{C:attention}+#2#{} hands per round.",
+                },
+            },
+
+            j_baliatro_lesser_demon = {
+                name = "Lesser Demon",
+                text = {
+                    "If played hand is {C:attention}Three of a Kind{}",
+                    "of {C:attention}6{}, and has no other cards",
+                    "create {C:attention}#1#{} {C:tarot}Devil{}"
                 },
             },
             -- upgraded jokers
@@ -658,6 +673,15 @@ return {
                     "overriding any other enhancement.",
                 }
             },
+
+            j_baliatro_labradorite = {
+                name = "Labradorite",
+                text = {
+                    "Played cards with {C:clubs}Clubs{} suit",
+                    "gain {X:mult,C:white}+X#1#{} when scored.",
+                }
+            },
+
             j_baliatro_swing = {
                 name = "The Swing",
                 text = {
@@ -877,6 +901,16 @@ return {
                     "scored {C:attention}Rank{} is scored.",
                 },
             },
+            j_baliatro_splatter = {
+                name = "Splatter",
+                text = {
+                    "Every {C:attention}played card{}",
+                    "and the leftmost {C:attention}#1#{} cards",
+                    "held in hand count in scoring.",
+                    "{C:inactive}Multiple copies of this effect{}",
+                    "{C:inactive}increase the number of cards used{}",
+                },
+            },
             -- Override jokers
             j_to_the_moon={
                 name="To the Moon",
@@ -952,6 +986,13 @@ return {
                     "plain. {C:red}Debuffed{} cards are plain."
                 },
             },
+            baliatro_original_base = {
+                name = "Obscured Card",
+                text = {
+                    "This card was originally",
+                    "{C:attention}#1#{} of {V:1}#2#{}"
+                }
+            },
             p_baliatro_postcard_normal = {
                 group_name = "Postcard Pack",
                 name = "Postcard Pack",
@@ -1007,11 +1048,9 @@ return {
                 name = "New York",
                 text = {
                     "{C:red}Double{} most numeric values on a compatible Joker.",
-                    "Does not affect values on {C:attention}Editions{}.",
                     "Cannot apply to {C:attention}Mortgage{} Jokers.",
                     "Remove {C:attention}Eternal{} from the Joker",
-                    "{C:green}#1# in #2#{} chance to apply {C:attention}Perishable{} to the Joker.",
-                    "Otherwise, apply {C:attention}Mortgage{}."
+                    "Apply {C:attention}Mortgage{} to Joker."
                 }
             },
             c_baliatro_budapest = {
@@ -1103,7 +1142,8 @@ return {
                 name = "Cairo",
                 text = {
                     "Apply {C:attention}Eternal{} to up to",
-                    "{c:attention}1{} selected non-{C:attention}Perishable{} Joker."
+                    "{c:attention}#1#{} selected non-{C:attention}Perishable{} Joker.",
+                    "Create {C:attention}#2#{} {C:spectral}Ankh{} if you have room",
                 },
             },
             c_baliatro_copenhagen = {
@@ -1289,6 +1329,23 @@ return {
                     "in one run",
                 },
             },
+
+            v_baliatro_specialty_store={
+                name="Specialty Store",
+                text={
+                    "{C:attention}+#1#{} Booster Pack",
+                    "slot in shop",
+                },
+            },
+
+            v_baliatro_premium_selection={
+                name="Premium Selection",
+                text={
+                    "Each upgradable Joker in",
+                    "Buffoon Packs has a {C:attention}#1#%{}",
+                    "chance to be {C:dark_edition}Upgraded{} instead",
+                },
+            },
         },
     },
     misc = {
@@ -1339,6 +1396,7 @@ return {
             b_baliatro_on_trigger = ' on trigger',
             k_baliatro_hand_ex="Hand!",
             k_baliatro_play_ex="Play!",
+            k_baliatro_expired_ex="Expired!",
         },
         high_scores={},
         labels={
@@ -1351,6 +1409,7 @@ return {
             baliatro_haunted = "Haunted",
             baliatro_ectoplasmic = "Ectoplasmic",
             baliatro_ethereal = "Ethereal",
+            baliatro_ephemeral = "Ephemeral",
             baliatro_faded_holo = "Faded Holographic",
             baliatro_faded_polychrome = "Faded Polychrome",
         },
