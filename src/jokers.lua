@@ -777,22 +777,7 @@ SMODS.Joker {
             G.playing_card = (G.playing_card and G.playing_card + amt) or amt
             local pcc = {}
             for i = 1, amt do
-                local _card = copy_card(context.full_hand[1], nil, nil, G.playing_card)
-                _card:set_edition('e_baliatro_ethereal')
-                _card.edition.created_on_discard = G.GAME.current_round.discards_used
-                _card:add_to_deck()
-                G.deck.config.card_limit = G.deck.config.card_limit + 1
-                table.insert(G.playing_cards, _card)
-                G.hand:emplace(_card)
-                _card.states.visible = nil
-
-                G.E_MANAGER:add_event(Event({
-                    func = function()
-                        _card:start_materialize()
-                        return true
-                    end
-                }))
-                pcc[#pcc+1] = true
+                pcc[#pcc+1] = BALIATRO.ethereal_copy(context.full_hand[1], true)
             end
             return {
                 message = localize('k_copied_ex'),
@@ -3214,6 +3199,90 @@ SMODS.Joker {
                     message = localize('k_plus_tarot'),
                     card = context.blueprint_card or card,
                     colour = G.C.SECONDARY_SET.Tarot,
+                }
+            end
+        end
+    end
+}
+
+-- 68. Afterimage
+-- If your first hand played in round contains only one card, destroy it. If a card was destroyed this way in current round, after each discard or hand played, add an Ethereal copy of it to your hand.
+SMODS.Joker {
+    name = "Afterimage",
+    key = "afterimage",
+
+    pos = {
+        x = 7,
+        y = 2,
+    },
+    config = {
+        extra = {
+            remembered_card = nil,
+        }
+    },
+
+    new_york = {
+        compatible = false,
+    },
+
+    unlocked = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 6,
+    rarity = 3,
+    atlas = "Baliatro",
+
+    loc_vars = function(self, info_queue, card)
+        if not G.GAME.blind or not G.GAME.blind.in_blind or G.GAME.current_round.hands_played == 0 then
+            return {vars = {localize('k_baliatro_afterimage_ready')}}
+        elseif card.ability.extra.remembered_card then
+            local rc = card.ability.extra.remembered_card
+            return {vars = {localize{type='variable', key='a_baliatro_afterimage_remembered', vars={rc.base.value, rc.base.suit}}}}
+        else
+            return {vars = {localize('k_baliatro_afterimage_no_card')}}
+        end
+    end,
+
+    calculate = function(self, card, context)
+        if context.end_of_round then
+            if not context.blueprint then
+                card.ability.extra.remembered_card = nil
+            end
+        elseif context.first_hand_drawn then
+            if not context.blueprint then
+                card.ability.extra.remembered_card = nil
+                local eval = function() return G.GAME.current_round.hands_played == 0 end
+                juice_card_until(card, eval, true)
+                end
+        elseif context.before and G.GAME.current_round.hands_played == 0 and #context.full_hand == 1 then
+            if not context.blueprint then
+                context.full_hand[1].baliatro_afterimage_remove = true
+                card.ability.extra.remembered_card = BALIATRO.skeleton_card(context.full_hand[1])
+                return {
+                    message = localize('k_baliatro_remembered_ex')
+                }
+            end
+        elseif context.destroy_card and context.destroy_card.baliatro_afterimage_remove then
+            if not context.blueprint then return {remove = true} end
+        elseif context.after and context.cardarea == G.jokers then
+            if card.ability.extra.remembered_card then
+                local _card = BALIATRO.ethereal_copy(card.ability.extra.remembered_card)
+                return {
+                    message = localize('k_baliatro_remembrance_ex'),
+                    colour = G.C.CHIPS,
+                    card = context.blueprint_card or card,
+                    playing_cards_created = {_card},
+                }
+            end
+        elseif context.pre_discard then
+            if card.ability.extra.remembered_card then
+                local _card = BALIATRO.ethereal_copy(card.ability.extra.remembered_card, true)
+                return {
+                    message = localize('k_baliatro_remembrance_ex'),
+                    colour = G.C.CHIPS,
+                    card = context.blueprint_card or card,
+                    playing_cards_created = {_card},
                 }
             end
         end

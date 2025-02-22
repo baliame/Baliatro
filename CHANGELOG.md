@@ -1,3 +1,21 @@
+# v0.1.0~pre5
+
+## Compatibility
+
+* Update compatibility to Steamodded **1421b**.
+
+## 🚀 New additions
+
+### Jokers
+
+* Added new Rare Joker **Afterimage**.
+
+## 🛠️ Bug Fixes
+
+### Editions
+
+* Fixed an issue where **Ethereal** cards would not be correctly destroyed if unscored or left in hand when playing a hand.
+
 # v0.1.0~pre4
 
 ## Compatibility

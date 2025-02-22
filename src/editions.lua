@@ -492,7 +492,7 @@ SMODS.Edition {
 
 
     calculate = function(self, card, context)
-        if (context.destroy_card and context.destroying_card == card) or (context.other_discarded and context.other_card == card and (not card.edition.created_on_discard or card.edition.created_on_discard ~= G.GAME.current_round.discards_used)) then
+        if (context.destroy_card and context.destroy_card == card) or (context.other_discarded and context.other_card == card and (not card.edition.created_on_discard or card.edition.created_on_discard ~= G.GAME.current_round.discards_used)) then
             return {remove = true}
         end
     end,

@@ -520,6 +520,52 @@ function BALIATRO.is_plain(card)
     return card.debuff or (card.ability.set ~= 'Enhanced' and not card.seal and not card.edition)
 end
 
+function BALIATRO.skeleton_card(card)
+    local ret = {
+        T = card.T,
+        ability = card.ability,
+        base = card.base,
+        config = {
+            center = card.config.center.key,
+            card = card.config.card,
+            card_key = card.config.card_key,
+        },
+        debuff = card.debuff,
+        params = card.params,
+        pinned = card.pinned,
+        seal = card.seal,
+        edition = nil
+    }
+    if card.edition then
+        local ed_key = card.edition.key:sub(3)
+        ret.edition = {[ed_key] = true}
+    end
+    return ret
+end
+
+function BALIATRO.ethereal_copy(card, discarding, destination)
+    if not destination then destination = G.hand end
+    local _card = copy_card(card, nil, nil, G.playing_card)
+    _card:set_edition('e_baliatro_ethereal')
+    if discarding then
+        _card.edition.created_on_discard = G.GAME.current_round.discards_used
+    end
+    _card:add_to_deck()
+    G.deck.config.card_limit = G.deck.config.card_limit + 1
+    table.insert(G.playing_cards, _card)
+    destination:emplace(_card)
+    _card.states.visible = nil
+
+    G.E_MANAGER:add_event(Event({
+        func = function()
+            _card:start_materialize()
+            return true
+        end
+    }))
+
+    return _card
+end
+
 return {
     name = "Baliatro Utils",
 }

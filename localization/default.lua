@@ -651,6 +651,16 @@ return {
                     "create {C:attention}#1#{} {C:tarot}Devil{}"
                 },
             },
+            j_baliatro_afterimage = {
+                name = "Afterimage",
+                text = {
+                    "If {C:attention}first hand of round{} contains only one",
+                    "card, destroy it. If a card was destroyed this",
+                    "way in current round, after each {C:red}discard{} or",
+                    "{C:blue}hand played{}, add an {C:dark_edition}Ethereal{} copy of it to hand",
+                    "{s:0.8,C:inactive}#1#{}"
+                },
+            },
             -- upgraded jokers
             j_baliatro_jimbo = {
                 name = "Jimbo",
@@ -1397,6 +1407,10 @@ return {
             k_baliatro_hand_ex="Hand!",
             k_baliatro_play_ex="Play!",
             k_baliatro_expired_ex="Expired!",
+            k_baliatro_afterimage_ready="Ready to remember a card",
+            k_baliatro_afterimage_no_card="No card remembered this round",
+            k_baliatro_remembered_ex="Remembered!",
+            k_baliatro_remembrance_ex="Remembrance!",
         },
         high_scores={},
         labels={
@@ -1449,6 +1463,7 @@ return {
             a_baliatro_pick_plus = 'pick +#1# ',
             a_baliatro_out_of = 'out of +#1#',
             a_divide_by_ex = 'Divide by +#1#!',
+            a_baliatro_afterimage_remembered = "Remembering a #1# of #2#",
         },
         v_text={},
     },
