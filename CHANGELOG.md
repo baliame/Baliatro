@@ -1,8 +1,14 @@
+# v0.1.0~pre4
+
+## Compatibility
+
+* Fix conflict with Bunco
+
 # v0.1.0~pre3
 
 ## Compatibility
 
-* Update compatibility to Steamodded 1420a.
+* Update compatibility to Steamodded **1420a**.
 
 ## 🚀 New additions
 
