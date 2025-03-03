@@ -24,13 +24,17 @@ G.init_game_object = function(self)
     ret.current_round.booster_rerolls = 0
     ret.current_round.effigy_card = {rank = 'Ace', id = 14}
     ret.mortgage_rate = 15
-    ret.shop_booster_packs = 2
     ret.edition_rate = 1.6
-    ret.voucher_limit = 1
-    ret.current_round.shop_vouchers = {}
     ret.ranks_scored = {}
     ret.real_estate = 1.5
     ret.pack_upgrade_chance = 0
+    ret.baliatro_pacts = {}
+    ret.pacts_cannot_appear = 0
+    ret.audience_progress = 0
+    ret.audience_progress_per_round = 9
+    ret.discard_to_deck = 0
+    ret.play_to_deck = 0
+
     for _, rank in pairs(SMODS.Ranks) do
         ret.ranks_scored[rank.key] = 0
     end
@@ -50,6 +54,18 @@ G.FUNCS.evaluate_round = function()
     G.GAME.interest_amount = int.c_v1
     G.GAME.interest_cap = int.c_v2
     return gfer()
+end
+
+
+local gfsb = G.FUNCS.skip_booster
+G.FUNCS.skip_booster = function(e)
+    if SMODS.OPENED_BOOSTER then
+        local center = SMODS.OPENED_BOOSTER.config.center
+        if center and center.on_skip and type(center.on_skip) == 'function' then
+            center:on_skip()
+        end
+    end
+    gfsb(e)
 end
 
 BALIATRO.cond = {
@@ -386,7 +402,7 @@ G.FUNCS.draw_from_play_to_discard = function(e)
 
     local target = G.discard
     local shuffle_target = false
-    if G.GAME.blind and G.GAME.blind.in_blind and G.GAME.blind.config and G.GAME.blind.config.blind and G.GAME.blind.config.blind.play_to_deck then
+    if G.GAME.blind and G.GAME.blind:is_playing_to_deck() or (G.GAME.play_to_deck and G.GAME.play_to_deck > 0) then
         target = G.deck
         shuffle_target = true
     end

@@ -48,48 +48,48 @@ end
 
 local csa = Card.set_ability
 Card.set_ability = function(self, center, initial, delay_sprites)
-    if not initial and center.set == 'Joker' and (center.discovered or self.bypass_discovery_center) then
+    if not initial and center and center.set == 'Joker' and (center.discovered or self.bypass_discovery_center) then
         local old_center = self.config.center
         if old_center and (old_center.name == 'Half Joker' or old_center.name == 'Photograph' or old_center.name == 'Square Joker' or old_center.name == 'Wee Joker' or (old_center.display_size and (old_center.display_size.w or old_center.display_size.h)) or (old_center.pixel_size and (old_center.pixel_size.w or old_center.pixel_size.h))) then
             self.T.w = G.CARD_W
             self.T.h = G.CARD_H
         end
     end
-    if center.set_size and type(center.set_size) == "function" then
+    if center and center.set_size and type(center.set_size) == "function" then
         center:set_size(self, initial, delay_sprites)
     end
     return csa(self, center, initial, delay_sprites)
 end
 
 
-local cgcm = Card.get_chip_mult
-Card.get_chip_mult = function (self)
-    local mult = cgcm(self)
-    local pm = (self.ability and self.ability.perma_mult) or 0
-    return mult + pm
-end
-
-local cgpd = Card.get_p_dollars
-
-Card.get_p_dollars = function (self)
-    local dollars = cgpd(self)
-    local pd = (self.ability and self.ability.perma_dollars) or 0
-    return dollars + pd
-end
-
-local cgcxm = Card.get_chip_x_mult
-
-Card.get_chip_x_mult = function (self, context)
-    local xmult = cgcxm(self, context)
-    local perma_xmult = (self.ability and self.ability.perma_xmult) or 0
-    if perma_xmult == 0 then
-        return xmult
-    end
-    if xmult == 0 then
-        return perma_xmult + 1
-    end
-    return xmult * (perma_xmult + 1)
-end
+--local cgcm = Card.get_chip_mult
+--Card.get_chip_mult = function (self)
+--    local mult = cgcm(self)
+--    local pm = (self.ability and self.ability.perma_mult) or 0
+--    return mult + pm
+--end
+--
+--local cgpd = Card.get_p_dollars
+--
+--Card.get_p_dollars = function (self)
+--    local dollars = cgpd(self)
+--    local pd = (self.ability and self.ability.perma_dollars) or 0
+--    return dollars + pd
+--end
+--
+--local cgcxm = Card.get_chip_x_mult
+--
+--Card.get_chip_x_mult = function (self, context)
+--    local xmult = cgcxm(self, context)
+--    local perma_xmult = (self.ability and self.ability.perma_xmult) or 0
+--    if perma_xmult == 0 then
+--        return xmult
+--    end
+--    if xmult == 0 then
+--        return perma_xmult + 1
+--    end
+--    return xmult * (perma_xmult + 1)
+--end
 
 local catd = Card.add_to_deck
 Card.add_to_deck = function (self, from_debuff)
@@ -105,6 +105,8 @@ Card.add_to_deck = function (self, from_debuff)
             G.GAME.spec_planets['baliatro_photographic'].ever =  true
         elseif self.edition.key == 'e_baliatro_scenic' then
             G.GAME.spec_planets['baliatro_scenic'].ever =  true
+        elseif self.edition.key == 'e_baliatro_pact' then
+            BALIATRO.apply_pact(self.edition.pact)
         end
     end
 end

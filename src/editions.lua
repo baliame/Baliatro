@@ -252,36 +252,51 @@ SMODS.Edition {
     end,
 
     augment = function(self, card, context, o, t)
+        local trigger_keys = {'chips', 'h_chips', 'chip_mod', 'mult', 'h_mult', 'mult_mod', 'x_mult', 'Xmult', 'xmult', 'x_mult_mod', 'Xmult_mod', 'h_x_chips', 'h_x_mult', 'p_dollars', 'dollars', 'h_dollars'}
         if o and not context.blueprint then
             local ed_level = G.GAME.spec_planets["baliatro_photographic"]
             local mult = ed_level.c_v1
-
-            local trigger_keys = {'chips', 'h_chips', 'chip_mod', 'mult', 'h_mult', 'mult_mod', 'x_mult', 'Xmult', 'xmult', 'x_mult_mod', 'Xmult_mod', 'p_dollars', 'dollars', 'h_dollars', 'level_up', 'repetitions'}
-            local xmod_keys = {'x_mult', 'Xmult', 'xmult', 'x_mult_mod', 'Xmult_mod'}
-
+            local acc = 1
             for i, key in ipairs(trigger_keys) do
                 if o[key] then
-                    o[key] = o[key] * mult
-                    local is_xmult = false
-                    for _, k2 in ipairs(xmod_keys) do
-                        if k2 == key then
-                            is_xmult = true
-                            break
-                        end
-                    end
-                    if not is_xmult then
-                        o[key] = math.floor(o[key])
-                    end
-                    --if o.message then
-                    --    o.message = localize{type='variable', key='a_baliatro_augment_photographic', vars={o.message}}
-                    --else
-                    --    o.message = localize('k_baliatro_augment_photographic')
-                    --end
-                    --break
+                    acc = acc * mult
                 end
+            end
+            if acc > 1 then
+                o.x_chips = (o.x_chips or 1) * acc
             end
         end
         return o, t
+            --if o and not context.blueprint then
+            --local ed_level = G.GAME.spec_planets["baliatro_photographic"]
+            --local mult = ed_level.c_v1
+--
+            --local trigger_keys = {'chips', 'h_chips', 'chip_mod', 'mult', 'h_mult', 'mult_mod', 'x_mult', 'Xmult', 'xmult', 'x_mult_mod', 'Xmult_mod', 'p_dollars', 'dollars', 'h_dollars', 'level_up', 'repetitions'}
+            --local xmod_keys = {'x_mult', 'Xmult', 'xmult', 'x_mult_mod', 'Xmult_mod'}
+--
+            --for i, key in ipairs(trigger_keys) do
+            --    if o[key] then
+            --        o[key] = o[key] * mult
+            --        local is_xmult = false
+            --        for _, k2 in ipairs(xmod_keys) do
+            --            if k2 == key then
+            --                is_xmult = true
+            --                break
+            --            end
+            --        end
+            --        if not is_xmult then
+            --            o[key] = math.floor(o[key])
+            --        end
+            --        --if o.message then
+            --        --    o.message = localize{type='variable', key='a_baliatro_augment_photographic', vars={o.message}}
+            --        --else
+            --        --    o.message = localize('k_baliatro_augment_photographic')
+            --        --end
+            --        --break
+            --    end
+            --end
+        --end
+        --return o, t
     end,
 
     on_apply = function(card)

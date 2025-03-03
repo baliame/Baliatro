@@ -168,6 +168,45 @@ SMODS.Consumable:take_ownership('c_cryptid', {
     end
 }, true)
 
+SMODS.Consumable:take_ownership('c_ankh', {
+
+    can_use = function(self, card)
+        local selectable_jokers = {}
+        for k, v in pairs(G.jokers.cards) do
+            if BALIATRO.manipulable(v) then selectable_jokers[#selectable_jokers + 1] = v end
+        end
+        return #selectable_jokers > 0
+    end,
+
+    use = function(self, card)
+        local deletable_jokers = {}
+        local selectable_jokers = {}
+        for k, v in pairs(G.jokers.cards) do
+            if not v.ability.eternal then deletable_jokers[#deletable_jokers + 1] = v end
+            if BALIATRO.manipulable(v) then selectable_jokers[#selectable_jokers + 1] = v end
+        end
+        local chosen_joker = pseudorandom_element(selectable_jokers, pseudoseed('ankh_choice'))
+        local _first_dissolve = nil
+        G.E_MANAGER:add_event(Event({trigger = 'before', delay = 0.75, func = function()
+            for k, v in pairs(deletable_jokers) do
+                if v ~= chosen_joker then
+                    v:start_dissolve(nil, _first_dissolve)
+                    _first_dissolve = true
+                end
+            end
+            return true end }))
+        G.E_MANAGER:add_event(Event({trigger = 'before', delay = 0.4, func = function()
+            local card = copy_card(chosen_joker, nil, nil, nil, chosen_joker.edition and chosen_joker.edition.negative)
+            card:start_materialize()
+            card:add_to_deck()
+            if card.edition and card.edition.negative then
+                card:set_edition(nil, true)
+            end
+            G.jokers:emplace(card)
+            return true end }))
+    end
+}, true)
+
 SMODS.Joker:take_ownership('j_dna', {
     calculate = function(self, card, context)
         if context.first_hand_drawn and not context.blueprint then
@@ -212,11 +251,11 @@ SMODS.Consumable:take_ownership('c_fool', {
     use = function(self, card, area, copier)
         local used_tarot = copier or card
         G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-        if G.consumeables.config.card_limit > #G.consumeables.cards or (used_tarot.edition and used_tarot.edition.negative) then
+        if G.consumeables.config.card_limit > #G.consumeables.cards or (used_tarot.edition and used_tarot.edition.card_limit and used_tarot.edition.card_limit > 0) then
             play_sound('timpani')
             local new_card = create_card('Tarot_Planet', G.consumeables, nil, nil, nil, nil, G.GAME.last_tarot_planet, 'fool')
-            if used_tarot.edition and used_tarot.edition.negative then
-                new_card:set_edition{negative = true}
+            if used_tarot.edition then
+                new_card:set_edition(used_tarot.edition.key)
             end
             new_card:add_to_deck()
             G.consumeables:emplace(new_card)
@@ -232,11 +271,11 @@ SMODS.Consumable:take_ownership('c_emperor', {
         local used_tarot = copier or card
         for i = 1, math.min(card.ability.consumeable.tarots, G.consumeables.config.card_limit - #G.consumeables.cards) do
             G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-                if G.consumeables.config.card_limit > #G.consumeables.cards or (used_tarot.edition and used_tarot.edition.negative) then
+                if G.consumeables.config.card_limit > #G.consumeables.cards or (used_tarot.edition and used_tarot.edition.card_limit and used_tarot.edition.card_limit > 0) then
                     play_sound('timpani')
                     local new_card = create_card('Tarot', G.consumeables, nil, nil, nil, nil, nil, 'emp')
-                    if used_tarot.edition and used_tarot.edition.negative then
-                        new_card:set_edition{negative = true}
+                    if used_tarot.edition then
+                        new_card:set_edition(used_tarot.edition.key)
                     end
                     new_card:add_to_deck()
                     G.consumeables:emplace(new_card)
@@ -304,11 +343,52 @@ SMODS.Joker:take_ownership('j_hack', {
     end
 }, true)
 
-local bdc = Blind.debuff_card
-Blind.debuff_card = function(self, card, from_blind)
-    if card.ability.cannot_be_debuffed then card:set_debuff(false); return end
-    bdc(self, card, from_blind)
-end
+SMODS.Joker:take_ownership("j_invisible", {
+    set_ability = function(self, card, initial, delay_sprites)
+        card.ability.invis_rounds = 0
+    end,
+
+    loc_vars = function(self, info_queue, card)
+        return {vars = {card.ability.extra, card.ability.invis_rounds}}
+    end,
+    calculate = function(self, card, context)
+        if context.selling_self and (self.ability.invis_rounds >= self.ability.extra) and not context.blueprint then
+            local eval = function(_c) return (_c.ability.loyalty_remaining == 0) and not G.RESET_JIGGLES end
+                juice_card_until(card, eval, true)
+            local jokers = {}
+            for i=1, #G.jokers.cards do
+                if G.jokers.cards[i] ~= card and BALIATRO.manipulable(G.jokers.cards[i]) then
+                    jokers[#jokers+1] = G.jokers.cards[i]
+                end
+            end
+            if #jokers > 0 then
+                if #G.jokers.cards <= G.jokers.config.card_limit then
+                    card_eval_status_text(context.blueprint_card or card, 'extra', nil, nil, nil, {message = localize('k_duplicated_ex')})
+                    local chosen_joker = pseudorandom_element(jokers, pseudoseed('invisible'))
+                    local card = copy_card(chosen_joker, nil, nil, nil, chosen_joker.edition and chosen_joker.edition.card_limit and chosen_joker.edition.card_limit > 0)
+                    if card.ability.invis_rounds then card.ability.invis_rounds = 0 end
+                    card:add_to_deck()
+                    G.jokers:emplace(card)
+                    return nil, true
+                else
+                    card_eval_status_text(context.blueprint_card or card, 'extra', nil, nil, nil, {message = localize('k_no_room_ex')})
+                end
+            else
+                card_eval_status_text(context.blueprint_card or card, 'extra', nil, nil, nil, {message = localize('k_no_other_jokers')})
+            end
+        elseif context.end_of_round and not context.blueprint then
+            card.ability.invis_rounds = self.ability.invis_rounds + 1
+            if card.ability.invis_rounds == card.ability.extra then
+                local eval = function(_c) return not _c.REMOVED end
+                juice_card_until(self, eval, true)
+            end
+            return {
+                message = (card.ability.invis_rounds < card.ability.extra) and (card.ability.invis_rounds..'/'..card.ability.extra) or localize('k_active_ex'),
+                colour = G.C.FILTER
+            }
+        end
+    end
+}, true)
 
 return {
     name = 'Baliatro Center Overrides'

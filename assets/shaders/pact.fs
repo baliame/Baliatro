@@ -4,7 +4,7 @@
 	#define PRECISION mediump
 #endif
 
-extern PRECISION vec2 ethereal;
+extern PRECISION vec2 pact;
 
 extern PRECISION number dissolve;
 extern PRECISION number time;
@@ -16,48 +16,6 @@ extern PRECISION vec4 burn_colour_2;
 
 extern PRECISION float lines_offset;
 
-float random (in vec2 _st) {
-    return fract(sin(dot(_st.xy,
-                         vec2(12.9898,78.233)))*
-        43758.5453123);
-}
-
-// Based on Morgan McGuire @morgan3d
-// https://www.shadertoy.com/view/4dS3Wd
-float noise (in vec2 _st) {
-    vec2 i = floor(_st);
-    vec2 f = fract(_st);
-
-    // Four corners in 2D of a tile
-    float a = random(i);
-    float b = random(i + vec2(1.0, 0.0));
-    float c = random(i + vec2(0.0, 1.0));
-    float d = random(i + vec2(1.0, 1.0));
-
-    vec2 u = f * f * (3.0 - 2.0 * f);
-
-    return mix(a, b, u.x) +
-            (c - a)* u.y * (1.0 - u.x) +
-            (d - b) * u.x * u.y;
-}
-
-#define NUM_OCTAVES 5
-
-float fbm ( in vec2 _st) {
-    float v = 0.0;
-    float a = 0.5;
-    vec2 shift = vec2(100.0);
-    // Rotate to reduce axial bias
-    mat2 rot = mat2(cos(0.5), sin(0.5),
-                    -sin(0.5), cos(0.50));
-    for (int i = 0; i < NUM_OCTAVES; ++i) {
-        v += a * noise(_st);
-        _st = rot * _st * 2.0 + shift;
-        a *= 0.5;
-    }
-    return v;
-}
-
 vec4 dissolve_mask(vec4 final_pixel, vec2 texture_coords, vec2 uv);
 
 float max(float a, float b) {
@@ -68,28 +26,83 @@ float min(float a, float b) {
     return a < b ? a : b;
 }
 
+#define timeScale 			1.0
+#define fireMovement 		vec2(-0.01, -0.5)
+#define distortionMovement	vec2(-0.01, -.5)
+#define normalStrength		40.0
+#define distortionStrength	0.1
+
+vec2 hash( vec2 p ) {
+	p = vec2( dot(p,vec2(127.1,311.7)),
+			  dot(p,vec2(269.5,183.3)) );
+
+	return -1.0 + 2.0*fract(sin(p) * 43758.5453123);
+}
+
+float noise( in vec2 p ) {
+    const float K1 = 0.366025404; // (sqrt(3)-1)/2;
+    const float K2 = 0.211324865; // (3-sqrt(3))/6;
+
+	vec2 i = floor( p + (p.x+p.y) * K1 );
+
+    vec2 a = p - i + (i.x+i.y) * K2;
+    vec2 o = step(a.yx,a.xy);
+    vec2 b = a - o + K2;
+	vec2 c = a - 1.0 + 2.0*K2;
+
+    vec3 h = vec3(
+        max( 0.5-dot(a,a), 0.0 ),
+        max( 0.5-dot(b,b), 0.0 ),
+        max( 0.5-dot(c,c), 0.0 )
+    );
+
+	vec3 n = h*h*h*h*h*vec3( dot(a,hash(i+0.0)), dot(b,hash(i+o)), dot(c,hash(i+1.0)));
+
+    return dot( n, vec3(70.0) );
+}
+
+float fbm ( in vec2 p ) {
+    float f = 0.0;
+    mat2 m = mat2( 1.6,  1.2, -1.2,  1.6 );
+    f  = 0.5000*noise(p); p = m*p;
+    f += 0.2500*noise(p); p = m*p;
+    f += 0.1250*noise(p); p = m*p;
+    f += 0.0625*noise(p); p = m*p;
+    f = 0.5 + 0.5 * f;
+    return f;
+}
+
+vec3 bumpMap(vec2 uv) {
+    //vec2 s = 1. / u_resolution.xy;
+    vec2 s = vec2(1.0);
+    float p =  fbm(uv);
+    float h1 = fbm(uv + s * vec2(1., 0));
+    float v1 = fbm(uv + s * vec2(0, 1.));
+
+   	vec2 xy = (p - vec2(h1, v1)) * normalStrength;
+    return vec3(xy + .5, 1.);
+}
+
 vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords )
 {
-    float t = ethereal[1] + 400;
+    vec2 uv = (((texture_coords)*(image_details)) - texture_details.xy*texture_details.zw)/texture_details.zw;
+    uv = vec2(uv.x, 1 - uv.y);
     vec4 tex = Texel(texture, texture_coords);
-	vec2 uv = (((texture_coords)*(image_details)) - texture_details.xy*texture_details.zw)/texture_details.zw;
-    vec2 st = uv * 4;
+    float t = (pact[1] + 400) * timeScale;
+    vec3 normal = bumpMap(uv * vec2(1.0, 0.3) + distortionMovement * t);
+    vec2 displacement = clamp((normal.xy - .5) * distortionStrength, -1., 1.);
+    vec2 disp_uv = uv + displacement;
 
-    vec3 color = vec3(0.99, 0.44, 0.42);
+    vec2 uvT = (uv * vec2(1.0, 0.5)) + fireMovement * t;
+    float n = pow(fbm(8.0 * uvT), 1.0);
 
-    vec2 q = vec2(0.);
-    q.x = fbm( st + 0.00*t);
-    q.y = fbm( st + vec2(1.0));
+    float gradient = pow(1.0 - uv.y, 2.0) * 5.;
+    float finalNoise = n * gradient;
 
-    vec2 r = vec2(0.);
-    r.x = fbm( st + 1.0*q + vec2(1.7,9.2)+ 0.15*t );
-    r.y = fbm( st + 1.0*q + vec2(5.3,2.8)+ 0.126*t);
-
-    float f =  fbm(st+r);
-
-    color = f * mix(tex.rgb, color, clamp(length(r.x),0.0,1.0));
-
-	return dissolve_mask(vec4(color, max(min(tex.a * 0.5, f), 0)), texture_coords, uv);
+    vec3 color = finalNoise * vec3(2.*n, 2.*n*n*n, n*n*n*n);
+    float lum = 0.21 * color.r + 0.71 * color.g + 0.07 * color.b;
+    vec4 out_color = vec4(mix(tex.rgb, tex.rgb * color, lum), tex.a * lum);
+	return dissolve_mask(out_color, texture_coords, uv);
     //return dissolve_mask(vec4(color, 0), texture_coords, uv);
 }
 

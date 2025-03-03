@@ -5,6 +5,7 @@ SMODS.Voucher:take_ownership('v_seed_money', {
         extra = 25,
     },
     loc_vars = function(self, info_queue, voucher)
+        info_queue[#info_queue+1] = {key='baliatro_interest_cap', set='Other', append_banned_set='Joker'}
         return {vars={voucher.ability.extra}}
     end,
     redeem = function(self, voucher)
@@ -18,6 +19,7 @@ SMODS.Voucher:take_ownership('v_money_tree', {
         extra = 50,
     },
     loc_vars = function(self, info_queue, voucher)
+        info_queue[#info_queue+1] = {key='baliatro_interest_cap', set='Other', append_banned_set='Joker'}
         return {vars={voucher.ability.extra}}
     end,
     redeem = function(self, voucher)
@@ -51,6 +53,7 @@ SMODS.Voucher:take_ownership('v_glow_up', {
 }, true)
 
 SMODS.Voucher:take_ownership('v_clearance_sale', {
+
     redeem = function(self, voucher)
         G.GAME.discount_percent = math.min(G.GAME.discount_percent + voucher.ability.extra, 99)
         for k, v in pairs(G.I.CARD) do
@@ -145,7 +148,7 @@ SMODS.Voucher {
     end,
 
     redeem = function(self, voucher)
-        G.GAME.shop_booster_packs = G.GAME.shop_booster_packs + voucher.ability.extra
+        SMODS.change_booster_limit(voucher.ability.extra)
         for i = 1, voucher.ability.extra do
             local new_pack = get_pack('shop_pack').key
             local j = #G.GAME.current_round.used_packs+1

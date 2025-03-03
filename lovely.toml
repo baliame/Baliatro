@@ -34,6 +34,18 @@ elseif _c.set == 'Planet' and _c.config.target then
 '''
 match_indent = true
 
+## Blinds in info queue
+#[[patches]]
+#[patches.pattern]
+#target = "functions/common_events.lua"
+#pattern = "elseif _c.set == 'Tarot' then"
+#position = "before"
+#match_indent = true
+#payload = '''elseif _c.set == 'Blind' then
+#    loc_vars = (_c.collection_loc_vars and type(_c.collection_loc_vars) == 'function' and _c.collection_loc_vars()) or _c.vars
+#    localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars}
+#'''
+
 [[patches]]
 # I can't be arsed to figure out the bugs and mysteries and implications of in_pool
 [patches.pattern]
@@ -44,6 +56,7 @@ payload = '''elseif v.can_appear and type(v.can_appear) == 'function' then
     add = v:can_appear()
 '''
 match_indent = true
+
 # old patch specific to planets
 #[patches.pattern]
 #target = "functions/common_events.lua"
@@ -60,7 +73,7 @@ target = "functions/state_events.lua"
 pattern = "if G.GAME.dollars >= 5 and not G.GAME.modifiers.no_interest then"
 position = "at"
 payload = '''
-if not G.GAME.modifiers.no_interest and G.GAME.interest_amount > 0 and (G.GAME.dollars + G.GAME.interest_basis_modifier) / (5 / (G.GAME.interest_amount)) >= 1 then
+if not G.GAME.modifiers.no_interest and G.GAME.interest_amount > 0 and (G.GAME.dollars + (G.GAME.interest_basis_modifier or 0)) / (5 / (G.GAME.interest_amount)) >= 1 then
     local interest = BALIATRO.calculate_interest_amount()
     local max_possible_interest = BALIATRO.calculate_interest_maximum()
     add_round_eval_row({bonus = true, name='interest', pitch = pitch, dollars = interest})
@@ -113,15 +126,6 @@ end
 '''
 match_indent = true
 
-# variable booster pack count
-[[patches]]
-[patches.pattern]
-target = "game.lua"
-pattern = 'for i = 1, 2 do'
-position = 'at'
-payload = 'for i = 1, G.GAME.shop_booster_packs do'
-match_indent = true
-
 # upgradable: badge
 [[patches]]
 [patches.pattern]
@@ -158,24 +162,6 @@ position = 'before'
 payload = "G.BADGE_COL['upgradable'] = HEX '9700b1'"
 match_indent = true
 
-
-# destroy unscored cards
-# [[patches]]
-# [patches.pattern]
-# target = "functions/state_events.lua"
-# pattern = "-- TARGET: add your own destroying card card areas here"
-# position = 'after'
-# payload = ''
-# match_indent = true
-#
-# [[patches]]
-# [patches.pattern]
-# target = "functions/state_events.lua"
-# pattern = "-- context.remove_playing_cards calculations"
-# position = 'after'
-# payload = 'BALIATRO.clear_unscored_cardarea()'
-# match_indent = true
-
 [[patches]]
 [patches.pattern]
 target = "card.lua"
@@ -184,17 +170,7 @@ position = 'at'
 payload = 'nominal_chips = (not self.config.center.replace_base_card and self.base.nominal > 0 and self.base.nominal) or nil,'
 match_indent = true
 
-# add perma mult bonus to set_ability
-[[patches]]
-[patches.pattern]
-target = "card.lua"
-pattern = "perma_bonus = self.ability and self.ability.perma_bonus or 0,"
-position = 'after'
-payload = '''perma_mult = self.ability and self.ability.perma_mult or 0,
-perma_dollars = self.ability and self.ability.perma_dollars or 0,
-perma_xmult = self.ability and self.ability.perma_xmult or 0,'''
-match_indent = true
-
+# reset base bonus when setting ability7
 [[patches]]
 [patches.pattern]
 target = "card.lua"
@@ -202,30 +178,6 @@ pattern = "self.ability.bonus = self.ability.bonus - old_center.config.bonus"
 position = 'at'
 payload = "self.ability.bonus = 0"
 match_indent = true
-
-#local unscored = BALIATRO.unscored({full_hand=G.play.cards, scoring_hand=scoring_hand})
-#for i=1, #unscored do
-#    local destroyed = nil
-#    for j = 1, #G.jokers.cards do
-#        local joker = G.jokers.cards[j]
-#        if joker.ability.supports_destroy_unscoring then
-#            local eval, post = eval_card(G.jokers.cards[j], {destroying_unscored_card = unscored[i], full_hand = G.play.cards})
-#            SMODS.trigger_effects({eval, post}, unscored[i])
-#            if eval.jokers then destroyed = true end
-#        end
-#
-#        if destroyed then
-#            if SMODS.shatters(unscored[i]) then
-#                unscored[i].shattered = true
-#            else
-#                unscored[i].destroyed = true
-#            end
-#            cards_destroyed[#cards_destroyed+1] = unscored[i]
-#        end
-#    end
-#end
-#'''
-#match_indent = true
 
 # edition augment
 [[patches]]
@@ -242,130 +194,13 @@ end
 '''
 match_indent = true
 
-
-# booster pack choices boost
-[[patches]]
-[patches.pattern]
-target = "card.lua"
-pattern = "G.GAME.pack_choices = self.config.center.config.choose or 1"
-position = "at"
-payload = 'G.GAME.pack_choices = self.ability.choose or self.config.center.config.choose or 1'
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = "card.lua"
-pattern = '''end        if self.ability.name:find('Arcana') then
-    G.STATE = G.STATES.TAROT_PACK
-    G.GAME.pack_size = self.ability.extra
-elseif self.ability.name:find('Celestial') then
-    G.STATE = G.STATES.PLANET_PACK
-    G.GAME.pack_size = self.ability.extra
-elseif self.ability.name:find('Spectral') then
-    G.STATE = G.STATES.SPECTRAL_PACK
-    G.GAME.pack_size = self.ability.extra
-elseif self.ability.name:find('Standard') then
-    G.STATE = G.STATES.STANDARD_PACK
-    G.GAME.pack_size = self.ability.extra
-elseif self.ability.name:find('Buffoon') then
-    G.STATE = G.STATES.BUFFOON_PACK
-    G.GAME.pack_size = self.ability.extra
-end'''
-position = 'at'
-payload = 'end'
-match_indent = true
-
-#### Voucher rework
-[[patches]]
-[patches.pattern]
-target = 'card.lua'
-pattern = 'if self.shop_voucher then G.GAME.current_round.voucher = nil end'
-position = 'at'
-payload = 'if self.shop_voucher ~= nil and self.shop_voucher > 0 then BALIATRO.claim_round_voucher(self) end'
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = 'card.lua'
-pattern = 'G.GAME.current_round.voucher = nil'
-position = 'at'
-payload = ''
-match_indent = true
-
-# reset voucher
-[[patches]]
-[patches.pattern]
-target = 'game.lua'
-pattern = 'self.GAME.current_round.voucher = G.SETTINGS.tutorial_progress and G.SETTINGS.tutorial_progress.forced_voucher or get_next_voucher_key()'
-position = 'at'
-payload = 'BALIATRO.reset_round_voucher()'
-match_indent = true
-
-# voucher placement fix
-[[patches]]
-[patches.pattern]
-target = 'functions/UI_definitions.lua'
-pattern = '''G.shop_vouchers = CardArea(
-    G.hand.T.x+0,
-    G.hand.T.y+G.ROOM.T.y + 9,
-    2.1*G.CARD_W,
-    1.05*G.CARD_H,
-    {card_limit = 1, type = 'shop', highlight_limit = 1})'''
-position = 'at'
-payload = '''G.shop_vouchers = CardArea(
-    G.hand.T.x+0,
-    G.hand.T.y+G.ROOM.T.y + 9,
-    2.1*G.CARD_W,
-    1.05*G.CARD_H,
-    {card_limit = #G.GAME.current_round.shop_vouchers, type = 'shop', highlight_limit = 1})'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = 'game.lua'
-pattern = '''if G.GAME.current_round.voucher and G.P_CENTERS[G.GAME.current_round.voucher] then
-    local card = Card(G.shop_vouchers.T.x + G.shop_vouchers.T.w/2,
-    G.shop_vouchers.T.y, G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS[G.GAME.current_round.voucher],{bypass_discovery_center = true, bypass_discovery_ui = true})
-    card.shop_voucher = true
-    create_shop_card_ui(card, 'Voucher', G.shop_vouchers)
-    card:start_materialize()
-    G.shop_vouchers:emplace(card)
-end'''
-position = 'at'
-payload = '''for i, voucher in ipairs(G.GAME.current_round.shop_vouchers) do
-    if voucher then
-        local card = Card(G.shop_vouchers.T.x + G.shop_vouchers.T.w/2, G.shop_vouchers.T.y, G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS[voucher], {bypass_discovery_center = true, bypass_discovery_ui = true})
-        card.shop_voucher = i
-        create_shop_card_ui(card, 'Voucher', G.shop_vouchers)
-        card:start_materialize()
-        G.shop_vouchers:emplace(card)
-    end
-end
-'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = 'functions/button_callbacks.lua'
-pattern = 'if (G.shop_vouchers and G.shop_vouchers.cards and (G.shop_vouchers.cards[1] or G.GAME.current_round.voucher)) then'
-position = 'at'
-payload = 'if (G.shop_vouchers and G.shop_vouchers.cards and (G.shop_vouchers.cards[1] or BALIATRO.any_voucher_available())) then'
-match_indent = true
-
+# voucher repeating
 [[patches]]
 [patches.pattern]
 target = 'functions/common_events.lua'
 pattern = 'if not G.GAME.used_vouchers[v.key] then '
 position = 'at'
 payload = 'if not G.GAME.used_vouchers[v.key] or BALIATRO.can_repeat_vouchers() then '
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = 'functions/state_events.lua'
-pattern = 'G.GAME.current_round.voucher = get_next_voucher_key()'
-position = 'at'
-payload = 'BALIATRO.reset_round_voucher()'
 match_indent = true
 
 # count number of times each rank is scored
@@ -398,7 +233,7 @@ pattern = "-- TARGET: pre_discard"
 position = 'after'
 payload = """local target = G.discard
 local shuffle_target = false
-if G.GAME.blind and G.GAME.blind.in_blind and G.GAME.blind.config and G.GAME.blind.config.blind and G.GAME.blind.config.blind.discard_to_deck then
+if G.GAME.blind and G.GAME.blind:is_discarding_to_deck() or (G.GAME.discard_to_deck and G.GAME.discard_to_deck > 0)  then
     target = G.deck
     shuffle_target = true
 end
@@ -430,61 +265,11 @@ match_indent = true
 target = "functions/state_events.lua"
 pattern = "-- TARGET: effects after cards destroyed in discard"
 position = 'after'
-payload = """if G.GAME.blind and G.GAME.blind.in_blind and G.GAME.blind.config and G.GAME.blind.config.blind and G.GAME.blind.config.blind.after_discard and type(G.GAME.blind.config.blind.after_discard) == 'function' then
-    G.GAME.blind.config.blind:after_discard()
+payload = """if G.GAME.blind then
+    G.GAME.blind:after_discard(cards)
 end
+SMODS.calculate_context({post_discard = true})
 """
-match_indent = true
-
-# extra mult display
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = '''if specific_vars.bonus_chips then
-    localize{type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = {specific_vars.bonus_chips}}
-end'''
-position = 'after'
-payload = '''if specific_vars.perma_mult and specific_vars.perma_mult > 0 then
-    localize{type = 'other', key = 'card_extra_mult', nodes = desc_nodes, vars = {specific_vars.perma_mult}}
-end
-if specific_vars.perma_dollars and specific_vars.perma_dollars > 0 then
-    localize{type = 'other', key = 'card_extra_dollars', nodes = desc_nodes, vars = {specific_vars.perma_dollars}}
-end
-if specific_vars.perma_xmult and specific_vars.perma_xmult ~= 1 then
-    localize{type = 'other', key = 'card_extra_xmult', nodes = desc_nodes, vars = {specific_vars.perma_xmult}}
-end
-'''
-match_indent = true
-
-# extra mult display 2
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = '''if specific_vars and _c.name ~= 'Stone Card' and specific_vars.nominal_chips then
-            localize{type = 'other', key = 'card_chips', nodes = desc_nodes, vars = {specific_vars.nominal_chips}}
-end'''
-position = 'after'
-payload = '''if specific_vars and specific_vars.perma_mult and specific_vars.perma_mult > 0 then
-    localize{type = 'other', key = 'card_extra_mult', nodes = desc_nodes, vars = {specific_vars.perma_mult}}
-end
-if specific_vars and specific_vars.perma_dollars and specific_vars.perma_dollars > 0 then
-    localize{type = 'other', key = 'card_extra_dollars', nodes = desc_nodes, vars = {specific_vars.perma_dollars}}
-end
-if specific_vars and specific_vars.perma_xmult and specific_vars.perma_xmult ~= 1 then
-    localize{type = 'other', key = 'card_extra_xmult', nodes = desc_nodes, vars = {specific_vars.perma_xmult}}
-end
-'''
-match_indent = true
-
-# extra mult display 3
-[[patches]]
-[patches.pattern]
-target = "card.lua"
-pattern = '''bonus_chips = (self.ability.bonus + (self.ability.perma_bonus or 0)) > 0 and (self.ability.bonus + (self.ability.perma_bonus or 0)) or nil,'''
-position = 'after'
-payload = '''perma_mult = self.ability.perma_mult or nil,
-perma_dollars = self.ability.perma_dollars or nil,
-perma_xmult = (self.ability.perma_xmult and self.ability.perma_xmult + 1) or nil,'''
 match_indent = true
 
 # debug
@@ -548,68 +333,126 @@ end
 '''
 match_indent = true
 
+# protect wild cards from suit debuffs
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+pattern = 'if self.debuff.suit and card:is_suit(self.debuff.suit, true) then'
+position = "after"
+match_indent = true
+payload = '''    for k, joker in ipairs(G.jokers.cards) do
+        if SMODS.has_any_suit(card) and not joker.debuff and joker.ability.extra and type(joker.ability.extra) == 'table' and joker.ability.extra.protect_wild then return end
+    end
+'''
+
+# Blinds: generic joker sold
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if self.ability.set == 'Joker' and G.GAME.blind and G.GAME.blind.name == 'Verdant Leaf' then"
+position = "at"
+match_indent = true
+payload = '''if self.ability.set == 'Joker' and G.GAME.blind and G.GAME.blind.config.blind and G.GAME.blind.config.blind.joker_sold and type(G.GAME.blind.config.blind.joker_sold) == 'function' then
+    G.GAME.blind.config.blind:joker_sold(self)
+elseif self.ability.set == 'Joker' and G.GAME.blind and G.GAME.blind.name == 'Verdant Leaf' then'''
+
+# Pacts: do not make Audience with the Devil shiny
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "self.children.center:draw_shader('booster', nil, self.ARGS.send_to_shader)"
+position = "at"
+match_indent = true
+payload = '''if not self.config.center.no_shine then
+    self.children.center:draw_shader('booster', nil, self.ARGS.send_to_shader)
+end'''
+
+
+## Nice looking blind box
+# Add custom info_queue box support
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = 'info_tip_from_rows(v, v.name),'
+position = "at"
+match_indent = true
+payload = 'v.no_format and v[1] or info_tip_from_rows(v, v.name)'
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "elseif _c.set == 'Blind' then"
+position = "after"
+match_indent = true
+payload = '''
+    desc_nodes[1] = BALIATRO.blind_uibox(_c)
+    desc_nodes.no_format = true
+elseif false then'''
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "elseif desc_nodes ~= full_UI_table.main and not desc_nodes.name then"
+position = "at"
+match_indent = true
+payload = "elseif desc_nodes ~= full_UI_table.main and not desc_nodes.name and _c.set ~= 'Blind' then"
+
+
+## Audience with the Devil appearance
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "if G.load_shop_booster then"
+position = "before"
+match_indent = true
+payload = '''if not G.load_shop_vouchers then
+    if G.GAME.audience_progress >= 1 and (not G.GAME.pacts_cannot_appear or G.GAME.pacts_cannot_appear <= 0) then
+        G.shop_vouchers.config.card_limit = G.shop_vouchers.config.card_limit + 1
+        local card = Card(G.shop_vouchers.T.x + G.shop_vouchers.T.w/2,
+            G.shop_vouchers.T.y, G.CARD_W * 1.27, G.CARD_H * 1.27, G.P_CARDS.empty, G.P_CENTERS['p_baliatro_pact_1'],{bypass_discovery_center = true, bypass_discovery_ui = true})
+        card.from_tag = true
+        create_shop_card_ui(card, 'Booster', G.shop_vouchers)
+        card:start_materialize()
+        G.shop_vouchers:emplace(card)
+        G.GAME.audience_progress = 0
+        G.GAME.audience_progress_per_round = G.GAME.audience_progress_per_round + 3
+    end
+end'''
+
+## Do not Invisible Joker pacts
 #[[patches]]
 #[patches.pattern]
-#target = 'functions/common_events.lua'
-#pattern = "localize{type = 'other', key = _c.key, nodes = desc_nodes, vars = specific_vars or _c.vars}"
+#target = "card.lua"
+#pattern = "if G.jokers.cards[i] ~= self then"
 #position = "at"
-#payload = "localize{type = 'other', key = _c.key, nodes = desc_nodes, vars = specific_vars or _c.vars, colours = _c.colours}"
 #match_indent = true
+#payload = "if G.jokers.cards[i] ~= self and BALIATRO.manipulable(G.jokers.cards[i]) then"
 
-# booster pack cards boost
-# [[patches]]
-# [patches.pattern]
-# target = "card.lua"
-# pattern = "local _size = self.ability.extra"
-# position = "at"
-# payload = 'local _size = self.ability.extra + math.floor(callisto.c_v2)'
-# match_indent = true
+## Banned cards feature
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "localize{type = 'other', key = _c.key, nodes = desc_nodes, vars = specific_vars or _c.vars}"
+position = "after"
+match_indent = true
+payload = 'if _c.append_banned_set then BALIATRO.generate_ban_set(_c.append_banned_set, desc_nodes) end'
 
 #[[patches]]
 #[patches.pattern]
-#target = "functions/common_events.lua"
-#pattern = '''local jokers = card:calculate_joker(context)
-#if jokers then
-#    ret.jokers = jokers
-#end
-#
-#local edition = card:get_edition(context)
-#if edition then
-#    ret.edition = edition
-#end'''
-#position = 'at'
-#payload = '''local jokers = card:calculate_joker(context)
-#if jokers then
-#    ret.jokers = jokers
-#end
-#
-#local edition = card:calculate_edition(context)
-#if edition then
-#    ret.edition = edition
-#end'''
-#match_indent = true
-
-#[[patches]]
-#[patches.regex]
-#target = "functions/state_events.lua"
+#target = "functions/UI_definitions.lua"
+#pattern = 'return {n=G.UIT.R, config={align = "cm", colour = lighten(G.C.GREY, 0.15), r = 0.1}, nodes={'
 #position = "before"
-#pattern = '''end
-#[ \t]*end
-#[ \t]*end
-#[ \t]*
-#[ \t]*delay\(0\.3\)'''
-#
-#payload = '''
-#                    for ii = 1, #effects do
-#                        if effects[ii].transfer and mult > 1 then
-#                            local t = math.min(effects[ii].transfer, mult - 1)
-#                            hand_chips = mod_chips(hand_chips + t)
-#                            mult = mod_mult(mult - t)
-#                            update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
-#                            card_eval_status_text(scoring_hand[i], 'extra', nil, percent, nil, {
-#                                message = localize{type="variable", key="a_baliatro_transfer", vars={t}},
-#                                colour = G.C.CHIPS,
-#                            })
-#                        end
-#                    end
-#'''
+#match_indent = true
+#payload = '''if desc_nodes.append_set then
+#    BALIATRO.generate_ban_set(desc_nodes.append_set, t)
+#    desc_nodes.append_set = nil
+#end'''
+
+## Act on a card being rerolled out of shop
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = 'local c = G.shop_jokers:remove_card(G.shop_jokers.cards[i])'
+position = "after"
+match_indent = true
+payload = 'SMODS.calculate_context({card_rerolled_from_shop = true, other_card = c})'

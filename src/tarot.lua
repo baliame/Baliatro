@@ -65,6 +65,17 @@ SMODS.Consumable {
 		info_queue[#info_queue+1] = G.P_CENTERS[self.config.mod_conv]
 		return {vars={(card and card.ability.consumeable.max_highlighted) or self.config.targets}}
 	end,
+
+	use = function(self, card, area, copier)
+		local targets = {}
+		for _, target in ipairs(G.hand.highlighted) do
+			targets[#targets+1] = target
+		end
+		BALIATRO.mod_conv_use(self, card, area, copier)
+		for _, target in ipairs(G.hand.highlighted) do
+			G.GAME.blind:debuff_card(target)
+		end
+	end
 }
 
 BALIATRO.mod_conv_or_cb = function(joker, card, area, copier)

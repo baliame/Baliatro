@@ -1274,13 +1274,13 @@ SMODS.Joker {
 }
 
 -- 27. Uneven Freeman
--- Played cards with odd rank gain +51 Chips when scored.
+-- Played cards with odd rank gain +31 Chips when scored.
 SMODS.Joker {
     name = "Uneven Freeman",
     key = "uneven_freeman",
     config = {
         extra = {
-            chips = 51,
+            chips = 31,
         }
     },
     pos = {
@@ -1305,9 +1305,9 @@ SMODS.Joker {
 
     calculate = function(self, card, context)
         if context.cardarea == G.play and context.individual then
-            if (context.other_card:get_id() <= 10 and context.other_card:get_id() >= 0 and context.other_card:get_id()%2 == 1) or context.other_card.get_id() == 14 then
+            if (context.other_card:get_id() <= 10 and context.other_card:get_id() >= 0 and context.other_card:get_id()%2 == 1) or context.other_card:get_id() == 14 then
                 context.other_card.ability.perma_bonus = context.other_card.ability.perma_bonus or 0
-                context.other_card.ability.perma_bonus = context.other_card.ability.perma_bonus + card.ability.extra.chips
+                context.other_card.ability.perma_bonus = context.other_card.ability.perma_bonus
                 return {
                     extra = {message = localize('k_upgrade_ex'), colour = G.C.CHIPS},
                     colour = G.C.CHIPS,
@@ -1492,7 +1492,7 @@ SMODS.Joker {
 
     calculate = function(self, card, context)
         if context.cardarea == G.play and context.individual and context.other_card and context.other_card:is_suit('Clubs')  then
-            context.other_card.ability.perma_xmult = context.other_card.ability.perma_xmult + card.ability.extra.x_mult_gain
+            context.other_card.ability.perma_x_mult = (context.other_card.ability.perma_x_mult or 0) + card.ability.extra.x_mult_gain
             return {
                 message = localize("k_upgrade_ex"),
                 card = context.other_card,

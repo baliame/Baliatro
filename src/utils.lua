@@ -11,7 +11,7 @@ end
 function BALIATRO.find_destructible_jokers()
     local eligible_destructible_jokers = {}
     for k, v in pairs(G.jokers.cards) do
-        if v.ability.set == 'Joker' and (not v.ability.eternal) and (not v.ability.baliatro_mortgage) then
+        if v.ability.set == 'Joker' and BALIATRO.manipulable(v) and (not v.ability.eternal) and (not v.ability.baliatro_mortgage) then
             table.insert(eligible_destructible_jokers, v)
         end
     end
@@ -21,7 +21,7 @@ end
 function BALIATRO.find_eternalable_jokers()
     local eligible_eternalable_jokers = {}
     for k, v in pairs(G.jokers.cards) do
-        if v.ability.set == 'Joker' and v.config.center.eternal_compat and (not v.ability.eternal) and (not v.ability.baliatro_mortgage) and (not v.ability.perishable) then
+        if v.ability.set == 'Joker' and BALIATRO.manipulable(v) and v.config.center.eternal_compat and (not v.ability.eternal) and (not v.ability.baliatro_mortgage) and (not v.ability.perishable) then
             table.insert(eligible_eternalable_jokers, v)
         end
     end
@@ -84,8 +84,10 @@ function BALIATRO.use_special_planet(target, card, copier, amount, immediate)
     if target == 'baliatro_booster_pack_choices' then
         if G.shop_booster and G.shop_booster.cards then
             for _, booster in ipairs(G.shop_booster.cards) do
-                booster.ability.choose = booster.ability.choose - math.floor(old_cv1) + math.floor(sp.c_v1)
-                booster.ability.extra = booster.ability.extra - math.floor(old_cv2) + math.floor(sp.c_v2)
+                if not booster.config.center.no_upgrade then
+                    booster.ability.choose = booster.ability.choose - math.floor(old_cv1) + math.floor(sp.c_v1)
+                    booster.ability.extra = booster.ability.extra - math.floor(old_cv2) + math.floor(sp.c_v2)
+                end
             end
         end
     elseif target == 'baliatro_interest' then
@@ -484,6 +486,8 @@ function BALIATRO.end_of_round()
         card.ability.played_this_round = nil
         card.ability.discarded_this_round = nil
     end
+
+    G.GAME.audience_progress = (G.GAME.audience_progress or 0) + 1 / (G.GAME.audience_progress_per_round) + 0.001
 end
 
 
@@ -564,6 +568,165 @@ function BALIATRO.ethereal_copy(card, discarding, destination)
     }))
 
     return _card
+end
+
+function CardArea:flip_all_face_up()
+    for i, card in ipairs(self.cards) do
+        if card.facing == 'back' then
+            card:flip()
+            card.ability.wheel_flipped = nil
+        end
+
+    end
+end
+
+function BALIATRO.flip_all_face_up()
+    G.hand:flip_all_face_up()
+    for i, card in ipairs(G.playing_cards) do
+        card.ability.wheel_flipped = nil
+    end
+end
+
+function BALIATRO.manipulable(joker)
+    return joker.config.center.rarity ~= 'baliatro_pact' and (not joker.edition or joker.edition.key ~= 'e_baliatro_pact')
+end
+
+---BALIATRO.suit_debuff = function(self, card, from_blind)
+---    local suit = self.debuff.suit
+---    if not suit then return false end
+---    if SMODS.has_any_suit(card) then
+---        for k, joker in ipairs(G.jokers.cards) do
+---            if not joker.debuff and joker.ability.extra and type(joker.ability.extra) == 'table' and joker.ability.extra.protect_wild then
+---                return false
+---            end
+---        end
+---    end
+---    if card:is_suit(suit, true) then return true end
+---    return false
+---end
+
+BALIATRO.Images = {}
+
+BALIATRO.Image = SMODS.GameObject:extend {
+    obj_table = BALIATRO.Images,
+    obj_buffer = {},
+    required_params = {
+        'key',
+        'path',
+    },
+    set = 'Image',
+
+    register = function(self)
+        if self.registered then
+            sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
+            return
+        end
+        self.name = self.key
+        BALIATRO.Image.super.register(self)
+    end,
+
+    inject = function(self)
+        local file_path = self.path
+        self.full_path = (self.mod and self.mod.path or SMODS.path) ..
+            'assets/images/' .. file_path
+        local file_data = assert(NFS.newFileData(self.full_path),
+            ('Failed to collect file data for Image %s'):format(self.key))
+        self.image_data = assert(love.image.newImageData(file_data),
+            ('Failed to initialize image data for Image %s'):format(self.key))
+        self.image = love.graphics.newImage(self.image_data,
+            { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
+        local mipmap_level = SMODS.config.graphics_mipmap_level_options[SMODS.config.graphics_mipmap_level]
+        if not self.disable_mipmap and mipmap_level and mipmap_level > 0 then
+            self.image:setMipmapFilter('linear', mipmap_level)
+        end
+    end,
+}
+
+function BALIATRO.recursive_merge(target, source)
+    for k, v in pairs(source) do
+        if type(v) == 'table' then
+            if not target[k] or type(target[k]) ~= 'table' then
+                target[k] = {}
+            end
+            BALIATRO.recursive_merge(target[k], v)
+        else
+            target[k] = v
+        end
+    end
+end
+
+function BALIATRO.generate_ban_set(set, t)
+    local myset = {}
+    if G.GAME and G.GAME.banned_keys then
+        for key, _ in pairs(G.GAME.banned_keys) do
+            local center = G.P_CENTERS[key]
+            if center and center.set and center.set == set then
+                myset[#myset+1] = key
+            end
+        end
+    end
+
+    local per_row = 1
+    local scale = 0.3
+
+    if #myset >= 21 then
+        per_row = 6
+        scale = 0.20
+    elseif #myset >= 17 then
+        per_row = 5
+        scale = 0.22
+    elseif #myset >= 13 then
+        per_row = 4
+        scale = 0.22
+    elseif #myset >= 9 then
+        per_row = 3
+        scale = 0.25
+    elseif #myset >= 5 then
+        per_row = 2
+        scale = 0.28
+    end
+
+    if #myset > 0 then
+        local rcount = 0
+        local row = {}
+        for _, key in ipairs(myset) do
+            local center_name = localize{type='name_text', set=set, key=key}
+            if rcount > 0 then
+                row[#row+1] = {n=G.UIT.T, config={text=', ', scale=scale, colour=G.C.UI.TEXT_DARK}}
+            end
+            row[#row+1] = {n=G.UIT.T, config={text=center_name, scale=scale, colour=G.C.IMPORTANT}}
+            rcount = rcount + 1
+            if per_row <= rcount then
+                t[#t+1] = row
+                row = {}
+                rcount = 0
+            end
+        end
+        if rcount > 0 then
+            t[#t+1] = row
+        end
+    else
+        t[#t+1] = {
+            {n=G.UIT.T, config={text=localize('k_baliatro_no_banned_cards_ex'), scale=scale, colour=G.C.PALE_GREEN}}
+        }
+    end
+end
+
+function BALIATRO.flip_set_ability(other_card, ability, affector)
+    G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.15, func = function()
+        other_card:flip()
+        play_sound('card1', 1)
+        if affector then
+            affector:juice_up(0.3, 0.3)
+        end
+        return true
+    end }))
+    G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.25, func = function()
+        other_card:set_ability(ability)
+        other_card:flip()
+        play_sound('tarot2', 1, 0.6)
+        return true
+    end }))
 end
 
 return {

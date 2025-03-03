@@ -70,7 +70,8 @@ return {
             bl_baliatro_count = {
                 name = 'The Count',
                 text = {
-                    'Numeric cards are debuffed.',
+                    'Numeric cards (except Aces)',
+                    'are debuffed.',
                 },
             },
             bl_baliatro_line = {
@@ -97,13 +98,21 @@ return {
                     'become debuffed.',
                 },
             },
+
+            bl_manacle={
+                name="The Manacle",
+                text={
+                    "-#1# Hand Size",
+                },
+            },
         },
         Edition={
             e_baliatro_photographic = {
                 name = "Photographic",
                 text = {
-                    "Multiplies all values",
-                    "granted by this card by {X:mult,C:white}X#1#{}"
+                    "{X:chips,C:white}X#1#{} Chips each time",
+                    "this card scores or causes a",
+                    "card to score {C:chips}Chips{}, {C:mult}Mult{} or {C:money}${}"
                 }
             },
             e_baliatro_scenic = {
@@ -171,13 +180,61 @@ return {
                     "{X:mult,C:white}X#1#{} Mult",
                 }
             },
+            e_baliatro_pact = {
+                name = "Pact",
+                text = {
+                    "{s:1.2,C:red}Price of Power{}",
+                    "{s:0.7,C:red}The unannulable terms of this deal are the following{}",
+                    "{C:dark_edition}+#2# Joker slot(s){}",
+                    "Cannot be destroyed or debuffed.",
+                    "Always applies the effect of a Blind",
+                    "Applies: {C:attention}#1#{}",
+                }
+            },
         },
         Enhanced={
             m_baliatro_resistant = {
                 name = 'Resistant Card',
                 text = {
                     '{C:mult}#1#{} Mult',
+                    'Permanently gains',
+                    '{C:mult}#2#{} Mult when scored.',
                     'Cannot be {C:red}debuffed{}',
+                },
+            },
+            m_baliatro_mtx_common = {
+                name = 'Microtransaction Card',
+                text = {
+                    'Free tier Microtransaction.',
+                    '{X:chips,C:white}X#1#{} Chips',
+                    '{C:attention}Value:{} {C:money}$#2#{}',
+                },
+            },
+            m_baliatro_mtx_uncommon = {
+                name = 'Microtransaction Card',
+                text = {
+                    '{C:green}Uncommon{} tier Microtransaction.',
+                    '{X:chips,C:white}X#2#{} Chips',
+                    '{C:money}-$#1#{} when scored',
+                    '{C:attention}Value:{} {C:money}$#3#{}',
+                },
+            },
+            m_baliatro_mtx_rare = {
+                name = 'Microtransaction Card',
+                text = {
+                    '{C:blue}Rare{} tier Microtransaction.',
+                    '{X:chips,C:white}X#2#{} Chips',
+                    '{C:money}-$#1#{} when scored',
+                    '{C:attention}Value:{} {C:money}$#3#{}',
+                },
+            },
+            m_baliatro_mtx_epic = {
+                name = 'Microtransaction Card',
+                text = {
+                    '{C:tarot}Epic{} tier Microtransaction.',
+                    '{X:chips,C:white}X#2#{} Chips',
+                    '{C:money}-$#1#{} when scored',
+                    '{C:attention}Value:{} {C:money}$#3#{}',
                 },
             },
         },
@@ -532,6 +589,7 @@ return {
             j_baliatro_bodybuilder = {
                 name = "Bodybuilder",
                 text = {
+                    '{C:mult}+#3#{} Mult',
                     'All scored cards have',
                     'a {C:green}#1# in #2# chance{}',
                     'to become one rank',
@@ -659,6 +717,58 @@ return {
                     "way in current round, after each {C:red}discard{} or",
                     "{C:blue}hand played{}, add an {C:dark_edition}Ethereal{} copy of it to hand",
                     "{s:0.8,C:inactive}#1#{}"
+                },
+            },
+            j_baliatro_echo = {
+                name = "Echo",
+                text = {
+                    "{C:attention}+#1#{} Hand Size",
+                    "After each {C:red}discard{} or {C:blue}hand{}",
+                    "played, add a random {C:dark_edition}Ethereal{}",
+                    "playing card to your hand.",
+                },
+            },
+            j_baliatro_monolith = {
+                name = "Monolith",
+                text = {
+                    "{C:attention}+#1#{} Mult if",
+                    "hand played is not",
+                    "your {C:attention}most played hand{}",
+                },
+            },
+            j_baliatro_sicilian_defence = {
+                name = "Sicilian Defence",
+                text = {
+                    "{C:attention}+#1#{} Mult if",
+                    "all cards in scored",
+                    "hand are {C:attention}plain{}",
+                },
+            },
+            j_baliatro_whale = {
+                name = "Whale Joker",
+                text = {
+                    "{C:money}-$#1#{} each hand played.",
+                    "After hand is scored, a",
+                    "random scoring unenhanced card",
+                    "becomes a {C:attention}Microtransaction{} Card."
+                },
+            },
+            j_baliatro_vapor_marketplace = {
+                name = "Vapor Marketplace",
+                text = {
+                    "After hand is scored, remove",
+                    "{C:attention}Microtransaction{} enhancements",
+                    "from all scored cards and gain",
+                    "dollars based on their value."
+                },
+            },
+            j_baliatro_battle_pass = {
+                name = "Battle Pass",
+                text = {
+                    "{C:money}-$#1#{} when {C:attention}Blind{}.",
+                    "is selected. At the end of round,",
+                    "some unenhanced cards in deck may",
+                    "become {C:attention}Microtransaction{} cards."
                 },
             },
             -- upgraded jokers
@@ -921,6 +1031,153 @@ return {
                     "{C:inactive}increase the number of cards used{}",
                 },
             },
+            -- Pacts and Punishment
+            j_baliatro_punishment_devils_scorn = {
+                name = "The Devil's Scorn",
+                text = {
+                    "{s:1.2,C:red}Hell Hath Fury{}",
+                    "{C:dark_edition}Audience with the Devil cannot appear{}",
+                    "{s:0.8,C:red}You didn't believe punishment was avoidable, did you?{}"
+                },
+            },
+            j_baliatro_pact_unseen_potential = {
+                name = "Unseen Potential",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}+#1# Joker slot(s){}",
+                },
+            },
+            j_baliatro_pact_dangerous_potential = {
+                name = "Dangerous Potential",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}+#1# Joker slot(s){}",
+                },
+            },
+            j_baliatro_pact_treacherous_potential = {
+                name = "Treacherous Potential",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}+#1# Joker slot(s){}",
+                    "{s:0.7,C:red}Destroy a random Joker (including Eternal) when selecting{}",
+                    "{s:0.7,C:red}a Blind if you have no non-negative Common jokers.{}",
+                },
+            },
+            j_baliatro_pact_unseen_might = {
+                name = "Unseen Might",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}+#1# Consumable slot(s){}",
+                },
+            },
+            j_baliatro_pact_dangerous_might = {
+                name = "Dangerous Might",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}+#1# Consumable slot(s){}",
+                },
+            },
+            j_baliatro_pact_treacherous_might = {
+                name = "Treacherous Might",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}+#1# Consumable slot(s){}",
+                    "{s:0.7,C:red}Each empty consumable slot grants {s:0.7,X:mult,C:white}X#2#{s:0.7,C:red} Mult{}",
+                    "{s:0.7,C:red}Jokers appear in the shop {s:0.7,X:green,C:white}X#3#{s:0.7,C:red} more often.{}",
+                },
+            },
+            j_baliatro_pact_unseen_fingers = {
+                name = "Unseen Fingers",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}+#1# hand size{}",
+                },
+            },
+            j_baliatro_pact_dangerous_fingers = {
+                name = "Dangerous Fingers",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}+#1# hand size{}",
+                },
+            },
+            j_baliatro_pact_treacherous_fingers = {
+                name = "Treacherous Fingers",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}+#1# hand size{}",
+                    "{s:0.7,C:red}Played and discarded cards return to your deck.{}",
+                },
+            },
+            j_baliatro_pact_unseen_riches = {
+                name = "Unseen Riches",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}Gain {C:money}$#1#{C:dark_edition} at end of round{}",
+                },
+            },
+            j_baliatro_pact_dangerous_riches = {
+                name = "Dangerous Riches",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}Gain {C:money}$#1#{C:dark_edition} at end of round{}",
+                },
+            },
+            j_baliatro_pact_treacherous_riches = {
+                name = "Treacherous Riches",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}Gain {C:money}$#1#{C:dark_edition} at end of round{}",
+                    "{s:0.7,C:red}But only when you have at most {s:0.7,C:money}$#2#{}",
+                },
+            },
+            j_baliatro_pact_unseen_quality = {
+                name = "Unseen Quality",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}Cards have a higher likelyhood{}",
+                    "{C:dark_edition}to be of less frequent rarities{}",
+                },
+            },
+            j_baliatro_pact_dangerous_quality = {
+                name = "Dangerous Quality",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}Cards have a higher likelyhood{}",
+                    "{C:dark_edition}to be of less frequent rarities{}",
+                },
+            },
+            j_baliatro_pact_treacherous_quality = {
+                name = "Treacherous Quality",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}Cards have a higher likelyhood{}",
+                    "{C:dark_edition}to be of less frequent rarities{}",
+                    "{s:0.7,C:red}Unpurchased non-Common Jokers sometimes{}",
+                    "{s:0.7,C:red}become banned when rerolling the shop.{}",
+                },
+            },
+            j_baliatro_pact_unseen_fortune = {
+                name = "Unseen Fortune",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{X:green,C:white}X#1#{C:dark_edition} to all listed probabilities{}",
+                },
+            },
+            j_baliatro_pact_dangerous_fortune = {
+                name = "Dangerous Fortune",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{X:green,C:white}X#1#{C:dark_edition} to all listed probabilities{}",
+                },
+            },
+            j_baliatro_pact_treacherous_fortune = {
+                name = "Treacherous Fortune",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{X:green,C:white}X#1#{C:dark_edition} to all listed probabilities{}",
+                    "{s:0.7,C:red}On average. Statistically. Over some indeterminate timeframe.{}",
+                },
+            },
             -- Override jokers
             j_to_the_moon={
                 name="To the Moon",
@@ -930,21 +1187,6 @@ return {
             },
         },
         Other={
-            card_extra_mult={
-                text={
-                    "{C:mult}+#1#{} extra mult",
-                },
-            },
-            card_extra_dollars={
-                text={
-                    "{C:money}+$#1#{} when scored",
-                },
-            },
-            card_extra_xmult={
-                text={
-                    "{X:mult,C:white}X#1#{} when scored",
-                },
-            },
             undiscovered_postcard = {
                 name = "Not Discovered",
                 text = {
@@ -972,6 +1214,22 @@ return {
                     "including {C:attention}Eternal{} and {C:attention}Mortgage{}.",
                     "After 12 payments, remove {C:attention}Mortgage{}",
                     "{C:inactive}({C:attention}#2#{C:inactive} payments remaining){}"
+                },
+            },
+            baliatro_interest_cap = {
+                name = "Interest Cap",
+                text = {
+                    "The maximum amount of dollars held",
+                    "for which {C:attention}Interest{} is calculated.",
+                },
+            },
+            baliatro_ban = {
+                name = "Ban",
+                text = {
+                    "A {C:attention}Banned{} card cannot appear",
+                    "randomly in shop or through any creation effect.",
+                    "Banned cards may still be created by targeted effects.",
+                    "{C:red}Currently banned Jokers:{}"
                 },
             },
             baliatro_immortal = {
@@ -1025,6 +1283,15 @@ return {
                 text = {
                     "Choose {C:attention}#1#{} of up to",
                     "{C:attention}#2#{} {C:joker}Upgraded Jokers{}",
+                }
+            },
+            p_baliatro_pact = {
+                group_name = "Audience with the Devil",
+                name = "Audience with the Devil",
+                text = {
+                    "{s:1.2,C:red}Choose a Deal with the Devil",
+                    "Gain an audience and pick {C:attention}#1#{} of up to {C:attention}#2#{} {C:joker}Pacts{}.",
+                    "{s:0.8,C:red}Once audience is gained, it would be very unwise to refuse.{}"
                 }
             },
         },
@@ -1222,7 +1489,7 @@ return {
                 text={
                     "{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up",
                     "{C:attention}#2#{}",
-                    "{X:mult,C:white}+X#3#{} Mult",
+                    "{X:chips,C:white}+X#3#{} Chips",
                 },
             },
             c_baliatro_ganymede = {
@@ -1278,7 +1545,7 @@ return {
                     "Creates the last",
                     "{C:tarot}Tarot{} or {C:planet}Planet{} card",
                     "used during this run",
-                    "Negative Fools create negative consumables",
+                    "Created cards inherit {C:dark_edition}Edition{}",
                     "{s:0.8,C:tarot}The Fool{s:0.8} excluded",
                 },
             },
@@ -1287,7 +1554,7 @@ return {
                 text={
                     "Creates up to {C:attention}#1#",
                     "random {C:tarot}Tarot{} cards",
-                    "Negative Emperors create negative consumables",
+                    "Created cards inherit {C:dark_edition}Edition{}",
                     "{C:inactive}(Must have room)",
                 },
             },
@@ -1296,7 +1563,7 @@ return {
                 text={
                     "Creates up to {C:attention}#1#",
                     "random {C:planet}Planet{} cards",
-                    "Negative Priestesses create negative consumables",
+                    "Created cards inherit {C:dark_edition}Edition{}",
                     "{C:inactive}(Must have room)",
                 },
             },
@@ -1306,16 +1573,12 @@ return {
                 name="Seed Money",
                 text={
                     "+{C:money}$#1#{} to interest cap",
-                    "{C:inactive}(interest cap is the maximum held dollars",
-                    "{C:inactive}that you can gain interest on)"
                 },
             },
             v_money_tree={
                 name="Money Tree",
                 text={
                     "+{C:money}$#1#{} to interest cap",
-                    "{C:inactive}(interest cap is the maximum held dollars",
-                    "{C:inactive}that you can gain interest on)"
                 },
             },
 
@@ -1382,15 +1645,22 @@ return {
             baliatro_cannot_transfer="Cannot transfer!",
             baliatro_postcard="Postcard",
             k_baliatro_postcard="Postcard",
+            k_baliatro_unknown="Unknown",
+            k_baliatro_inflation_ex = "Inflation!",
             k_postcard="Postcard",
             b_baliatro_postcard_cards="Postcards",
             b_postcard_cards="Postcards",
             k_baliatro_upgraded="Upgraded",
+            k_baliatro_pact="Pact",
             baliatro_plus_postcard="+1 Postcard",
             k_downgrade_ex="Downgrade!",
+            k_baliatro_destroyed_ex="Destroyed!",
             baliatro_mortgage = "Mortgage",
             k_baliatro_postcard_pack = "Postcard Pack",
             k_baliatro_upgraded_buffoon_pack = "Upgraded Buffoon Pack",
+            k_baliatro_pact_pack = "Audience with the Devil",
+            k_baliatro_banned_ex = "Banned!",
+            k_baliatro_no_banned_cards_ex = "No banned cards!",
             k_baliatro_destroyed_card_ex="Destroyed card!",
             k_baliatro_converted_card_ex="Converted card!",
             k_baliatro_plus_card_ex="+1 Card!",
@@ -1411,6 +1681,9 @@ return {
             k_baliatro_afterimage_no_card="No card remembered this round",
             k_baliatro_remembered_ex="Remembered!",
             k_baliatro_remembrance_ex="Remembrance!",
+            k_baliatro_random_unseen_blind = "<random blind hidden before selection>",
+            k_baliatro_random_showdown_blind = "<random showdown blind>",
+            k_baliatro_random_blind = "<random non-showdown blind>",
         },
         high_scores={},
         labels={
@@ -1418,6 +1691,7 @@ return {
             baliatro_scenic = "Scenic",
             baliatro_mortgage = "Mortgage",
             baliatro_immortal = "Immortal",
+            baliatro_ban = "Ban",
             upgradable = "Upgradable",
             baliatro_faded_foil = "Faded Foil",
             baliatro_haunted = "Haunted",
@@ -1426,6 +1700,7 @@ return {
             baliatro_ephemeral = "Ephemeral",
             baliatro_faded_holo = "Faded Holographic",
             baliatro_faded_polychrome = "Faded Polychrome",
+            baliatro_pact = "Pact",
         },
         poker_hand_descriptions={},
         poker_hands={},
@@ -1464,6 +1739,7 @@ return {
             a_baliatro_out_of = 'out of +#1#',
             a_divide_by_ex = 'Divide by +#1#!',
             a_baliatro_afterimage_remembered = "Remembering a #1# of #2#",
+            a_baliatro_x_base = '#1#X Base',
         },
         v_text={},
     },

@@ -1334,7 +1334,6 @@ SMODS.Joker {
                 if other_card.edition then
                     return {
                         xmult = card.ability.extra.xmult,
-                        message = localize{type = 'variable', key = 'a_xmult', vars = {card.ability.extra.xmult}},
                     }
                 end
             end
@@ -1443,11 +1442,11 @@ SMODS.Joker {
     end,
 
     add_to_deck = function(self, card, from_debuff)
-        G.GAME.voucher_limit = G.GAME.voucher_limit + 1
+        SMODS.change_voucher_limit(1)
     end,
 
     remove_from_deck = function(self, card, from_debuff)
-        G.GAME.voucher_limit = G.GAME.voucher_limit - 1
+        SMODS.change_voucher_limit(-1)
     end
 }
 
@@ -2219,7 +2218,7 @@ SMODS.Joker {
     config = {
         extra = {
             mult = 0,
-            mult_gain = 2,
+            mult_gain = 1,
         }
     },
 
@@ -2350,6 +2349,7 @@ SMODS.Joker {
     config = {
         extra = {
             odds = 2,
+            mult = 4,
         }
     },
 
@@ -2366,7 +2366,7 @@ SMODS.Joker {
     atlas = "Baliatro",
 
     loc_vars = function(self, info_queue, card)
-        return {vars = {(G.GAME and G.GAME.probabilities.normal) or 1, card.ability.extra.odds}}
+        return {vars = {(G.GAME and G.GAME.probabilities.normal) or 1, card.ability.extra.odds, card.ability.extra.mult}}
     end,
 
     calculate = function(self, card, context)
@@ -2400,6 +2400,10 @@ SMODS.Joker {
             return {
                 message = localize('k_upgrade_ex'),
                 card = context.blueprint_card or card,
+            }
+        elseif context.joker_main then
+            return {
+                mult = card.ability.extra.mult
             }
         end
     end
@@ -2709,7 +2713,7 @@ SMODS.Joker {
     atlas = "Baliatro",
 
     on_already_enhanced = function(joker, other_card, used_tarot)
-        other_card.ability.perma_xmult = (other_card.ability.perma_xmult or 0) + joker.ability.extra.bonus
+        other_card.ability.perma_x_mult = (other_card.ability.perma_x_mult or 0) + joker.ability.extra.bonus
     end,
 
     card_has_any_suit = function(self, card, other_card)
@@ -3053,7 +3057,7 @@ SMODS.Joker {
     key = "real_estate",
     config = {
         extra = {
-            xmult_gain = 1,
+            xmult_gain = 0.5,
         }
     },
     pos = {
@@ -3071,6 +3075,10 @@ SMODS.Joker {
     new_york = {
         compatible = true,
     },
+
+    in_pool = function(self, args)
+        return true, true
+    end,
 
     loc_vars = function(self, info_queue, card)
         return { vars = {(G.GAME and G.GAME.real_estate) or 1.5, card.ability.extra.xmult_gain}}
@@ -3122,8 +3130,8 @@ SMODS.Joker {
     end,
 
     remove_from_deck = function(self, card, from_debuff)
-        G.GAME.round_resets.hands = G.GAME.round_resets.hands - card.ability.extra.hands
-        ease_hands_played(-card.ability.extra.hands)
+        G.GAME.round_resets.hands = math.max(G.GAME.round_resets.hands - card.ability.extra.hands, 1)
+        ease_hands_played(-math.min(G.GAME.current_round.hands_left - 1, -card.ability.extra.hands))
     end,
 
     loc_vars = function(self, info_queue, card)
@@ -3285,6 +3293,404 @@ SMODS.Joker {
                     playing_cards_created = {_card},
                 }
             end
+        end
+    end
+}
+
+-- 69. Echo
+-- +1 Hand Size. After each discard or hand played, add a random enhanced Ethereal playing card to your hand.
+SMODS.Joker {
+    name = "Echo",
+    key = "echo",
+
+    pos = {
+        x = 0,
+        y = 0,
+    },
+    config = {
+        h_size = 1
+    },
+
+    new_york = {
+        compatible = false,
+    },
+
+    unlocked = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 4,
+    rarity = 1,
+    atlas = "Baliatro",
+
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = G.P_CENTERS['e_baliatro_ethereal']
+        return {vars = {card.ability.h_size}}
+    end,
+
+    create_card = function(self, on_discard)
+        local _enh = SMODS.poll_enhancement({guaranteed = true})
+        local _seal = SMODS.poll_seal({mod = 10})
+        local _card = SMODS.create_card {set = "Enhanced", edition = 'e_baliatro_ethereal', enhancement = _enh, seal = _seal, area = G.hand, skip_materialize = true, soulable = false, key_append = "echo"}
+
+        _card:set_edition('e_baliatro_ethereal')
+        _card:add_to_deck()
+        G.deck.config.card_limit = G.deck.config.card_limit + 1
+        if on_discard then
+            _card.edition.created_on_discard = G.GAME.current_round.discards_used
+        end
+        table.insert(G.playing_cards, _card)
+        G.hand:emplace(_card)
+        _card.states.visible = nil
+
+        G.E_MANAGER:add_event(Event({
+            func = function()
+                _card:start_materialize()
+                return true
+            end
+        }))
+    end,
+
+    calculate = function(self, card, context)
+        if context.after and context.cardarea == G.jokers or context.pre_discard then
+            self:create_card(context.pre_discard)
+        end
+    end
+}
+
+-- 70.
+-- +10 Mult if hand is not your most played hand.
+SMODS.Joker {
+    name = "Monolith",
+    key = "monolith",
+
+    pos = {
+        x = 0,
+        y = 0,
+    },
+    config = {
+        extra = {
+            mult = 10,
+        }
+    },
+
+    new_york = {
+        compatible = true,
+    },
+
+    unlocked = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 5,
+    rarity = 1,
+    atlas = "Baliatro",
+
+    loc_vars = function(self, info_queue, card)
+        return {vars = {card.ability.extra.mult}}
+    end,
+
+    calculate = function(self, card, context)
+        if context.joker_main then
+            local mph = BALIATRO.most_played_hand_times()
+            if G.GAME.hands[context.scoring_name].played ~= mph then
+                return {
+                    mult = card.ability.extra.mult
+                }
+            end
+        end
+    end
+}
+
+-- 71. Sicilian Defence
+-- +20 Mult if all cards in scored hand are plain
+SMODS.Joker {
+    name = "Sicilian Defence",
+    key = "sicilian_defence",
+
+    pos = {
+        x = 0,
+        y = 0,
+    },
+    config = {
+        extra = {
+            mult = 20,
+        }
+    },
+
+    new_york = {
+        compatible = true,
+    },
+
+    unlocked = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 5,
+    rarity = 1,
+    atlas = "Baliatro",
+
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = {key='baliatro_plain', set='Other'}
+        return { vars = {card.ability.extra.mult}}
+    end,
+
+    calculate = function(self, card, context)
+        if context.joker_main then
+            for i, other in ipairs(context.scoring_hand) do
+                if not BALIATRO.is_plain(other) then return end
+            end
+            return {
+                mult = card.ability.extra.mult
+            }
+        end
+    end
+}
+
+-- 72. Whale Joker
+-- -$0 per hand played. Before hand is scored, a random, scored unenhanced card becomes a Microtransaction Card.
+SMODS.Joker {
+    name = "Whale Joker",
+    key = "whale",
+
+    pos = {
+        x = 0,
+        y = 0,
+    },
+    config = {
+        extra = {
+            cost = 0,
+            inflation_grace = 2,
+            inflation_odds = 2,
+            epic = 1,
+            rare = 5,
+            uncommon = 10,
+            common = 10,
+        }
+    },
+
+    new_york = {
+        compatible = false,
+    },
+
+    unlocked = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 6,
+    rarity = 1,
+    atlas = "Baliatro",
+
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = G.P_CENTERS.m_baliatro_mtx_common
+        info_queue[#info_queue+1] = G.P_CENTERS.m_baliatro_mtx_uncommon
+        info_queue[#info_queue+1] = G.P_CENTERS.m_baliatro_mtx_rare
+        info_queue[#info_queue+1] = G.P_CENTERS.m_baliatro_mtx_epic
+        return { vars = {card.ability.extra.cost}}
+    end,
+
+    calculate = function(self, card, context)
+        if context.joker_main and card.ability.extra.cost > 0 then
+            return {
+                dollars = -card.ability.extra.cost
+            }
+        elseif context.before then
+            local total_weight = card.ability.extra.common + card.ability.extra.uncommon + card.ability.extra.rare + card.ability.extra.epic
+            local wt = total_weight * pseudorandom('whale')
+            local targets = {}
+            for _, cand in ipairs(context.scoring_hand) do
+                if cand.ability.set == 'Default' then targets[#targets+1] = cand end
+            end
+            if #targets > 0 then
+                local other_card = pseudorandom_element(targets, pseudoseed('whale'))
+
+                if wt < card.ability.extra.common then
+                    other_card:set_ability('m_baliatro_mtx_common')
+                elseif wt < card.ability.extra.common + card.ability.extra.uncommon then
+                    other_card:set_ability('m_baliatro_mtx_uncommon')
+                elseif wt < card.ability.extra.common + card.ability.extra.uncommon + card.ability.extra.rare then
+                    other_card:set_ability('m_baliatro_mtx_rare')
+                else
+                    other_card:set_ability('m_baliatro_mtx_epic')
+                end
+                return {
+                    message = localize('k_upgrade_ex'),
+                    message_card = other_card,
+                }
+            end
+        elseif context.setting_blind then
+            if card.ability.extra.inflation_grace > 0 then
+                card.ability.extra.inflation_grace = card.ability.extra.inflation_grace - 1
+            elseif pseudorandom('whale') < 1 / card.ability.extra.inflation_odds then
+                card.ability.extra.cost = card.ability.extra.cost + 1
+                return {
+                    message = localize('k_baliatro_inflation_ex'),
+                }
+            end
+        end
+    end
+}
+
+-- 73.
+-- After a hand is scored, remove Microtransaction enhancements from all scored cards and gain dollars based on tier values.
+SMODS.Joker {
+    name = "Vapor Marketplace",
+    key = "vapor_marketplace",
+
+    pos = {
+        x = 0,
+        y = 0,
+    },
+    config = {
+        extra = {
+            common = 3,
+            uncommon = 5,
+            rare = 10,
+            epic = 20,
+        }
+    },
+
+    new_york = {
+        compatible = false,
+    },
+
+    unlocked = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 4,
+    rarity = 2,
+    atlas = "Baliatro",
+
+    in_pool = function(self, args)
+        for kk, vv in pairs(G.playing_cards) do
+            if SMODS.has_enhancement(vv, 'm_baliatro_mtx_common') or SMODS.has_enhancement(vv, 'm_baliatro_mtx_uncommon') or SMODS.has_enhancement(vv, 'm_baliatro_mtx_rare') or SMODS.has_enhancement(vv, 'm_baliatro_mtx_epic') then
+                return true
+            end
+        end
+    end,
+
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = G.P_CENTERS.m_baliatro_mtx_common
+        info_queue[#info_queue+1] = G.P_CENTERS.m_baliatro_mtx_uncommon
+        info_queue[#info_queue+1] = G.P_CENTERS.m_baliatro_mtx_rare
+        info_queue[#info_queue+1] = G.P_CENTERS.m_baliatro_mtx_epic
+        return {vars = {}}
+    end,
+
+    calculate = function(self, card, context)
+        if context.after and context.cardarea == G.jokers and not context.blueprint then
+            local mtx_dollars = 0
+            for _, cand in ipairs(context.scoring_hand) do
+                if SMODS.has_enhancement(cand, 'm_baliatro_mtx_common') or SMODS.has_enhancement(cand, 'm_baliatro_mtx_uncommon') or SMODS.has_enhancement(cand, 'm_baliatro_mtx_rare') or SMODS.has_enhancement(cand, 'm_baliatro_mtx_epic') then
+                    mtx_dollars = mtx_dollars + cand.ability.mtx_value
+                    local target = cand
+
+                    G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.05, func = function()
+                        target:set_ability(G.P_CENTERS.c_base, nil, true)
+                        return true
+                    end}))
+                end
+            end
+            return {
+                dollars = mtx_dollars,
+                message_card = card,
+            }
+        end
+    end
+}
+
+-- 74.
+-- -$4 when blind is selected. At end of round, some unenhanced cards in your deck may become Microtransaction cards.
+SMODS.Joker {
+    name = "Battle Pass",
+    key = "battle_pass",
+
+    pos = {
+        x = 0,
+        y = 0,
+    },
+    config = {
+        extra = {
+            cost = 4,
+            odds = {1, 1.5, 2, 3, 4},
+            inflation_grace = 3,
+            inflation_odds = 6,
+            common = 3,
+            uncommon = 5,
+            rare = 10,
+            epic = 20,
+        }
+    },
+
+    new_york = {
+        compatible = false,
+    },
+
+    unlocked = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 1,
+    rarity = 2,
+    atlas = "Baliatro",
+
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = G.P_CENTERS.m_baliatro_mtx_common
+        info_queue[#info_queue+1] = G.P_CENTERS.m_baliatro_mtx_uncommon
+        info_queue[#info_queue+1] = G.P_CENTERS.m_baliatro_mtx_rare
+        info_queue[#info_queue+1] = G.P_CENTERS.m_baliatro_mtx_epic
+        return { vars = {card.ability.extra.cost}}
+    end,
+
+    calculate = function(self, card, context)
+        if context.end_of_round and context.cardarea == G.jokers then
+            local total_weight = card.ability.extra.common + card.ability.extra.uncommon + card.ability.extra.rare + card.ability.extra.epic
+            local targets = {}
+            for _, cand in ipairs(G.playing_cards) do
+                if cand.ability.set == 'Default' then targets[#targets+1] = cand end
+            end
+            local odds_idx = 1
+            local stop = false
+            repeat
+                local odds = #card.ability.extra.odds >= odds_idx and card.ability.extra.odds[odds_idx] or card.ability.extra.odds[#card.ability.extra.odds]
+                odds_idx = odds_idx + 1
+                if pseudorandom('bpass') <= 1 / odds then
+                    local wt = total_weight * pseudorandom('bpass')
+                    if #targets > 0 then
+                        local other_card, other_key = pseudorandom_element(targets, pseudoseed('bpass'))
+                        table.remove(targets, other_key)
+
+                        if wt < card.ability.extra.common then
+                            other_card:set_ability('m_baliatro_mtx_common')
+                        elseif wt < card.ability.extra.common + card.ability.extra.uncommon then
+                            other_card:set_ability('m_baliatro_mtx_uncommon')
+                        elseif wt < card.ability.extra.common + card.ability.extra.uncommon + card.ability.extra.rare then
+                            other_card:set_ability('m_baliatro_mtx_rare')
+                        else
+                            other_card:set_ability('m_baliatro_mtx_epic')
+                        end
+                    end
+                else
+                    stop = true -- technically could just break here
+                end
+            until stop
+            return {
+                message = localize('k_upgrade_ex'),
+            }
+        elseif context.setting_blind then
+            if card.ability.extra.inflation_grace > 0 then
+                card.ability.extra.inflation_grace = card.ability.extra.inflation_grace - 1
+            elseif pseudorandom('battle_pass') < 1 / card.ability.extra.inflation_odds then
+                card.ability.extra.cost = card.ability.extra.cost + 1
+                return {
+                    message = localize('k_baliatro_inflation_ex'),
+                    dollars = -card.ability.extra.cost
+                }
+            end
+            return {
+                dollars = -card.ability.extra.cost
+            }
         end
     end
 }

@@ -36,8 +36,10 @@ SMODS.Sticker {
                 local _first_dissolve = nil
                 G.E_MANAGER:add_event(Event({trigger = 'before', delay = 0.75, func = function()
                     for i, joker in ipairs(G.jokers.cards) do
-                        joker:start_dissolve(nil, _first_dissolve)
-                        _first_dissolve = true
+                        if BALIATRO.manipulable(joker) then
+                            joker:start_dissolve(nil, _first_dissolve)
+                            _first_dissolve = true
+                        end
                     end
                     return true
                 end }))

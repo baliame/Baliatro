@@ -15,6 +15,17 @@ SMODS.Consumable {
     config = { target="baliatro_interest", v1 = 0.03, v2 = 2, initial_v1 = 1, initial_v2 = 25, moon = true},
     pos = {x = 1, y = 0 },
     atlas = 'BaliatroPlanets',
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = {key='baliatro_interest_cap', set='Other', append_banned_set='Joker'}
+        local target = card.ability.target
+        local t = G.GAME.spec_planets[target]
+        return {vars={
+            t.level,
+            localize(target),
+            t.v1,
+            t.v2,
+        }}
+    end,
     can_appear = function(self)
         -- artificially create scarcity over level 10
         local top = math.max(0, G.GAME.spec_planets['baliatro_interest'].level - 10)
@@ -39,6 +50,16 @@ SMODS.Consumable {
     config = { softlock=true, target="baliatro_foil", v1 = 25, initial_v1 = 50, moon = true, spec_extra = {ever = false}},
     pos = {x = 2, y = 0 },
     atlas = 'BaliatroPlanets',
+    loc_vars = function(self, info_queue, card)
+        local target = card.ability.target
+        local t = G.GAME.spec_planets[target]
+        return {vars={
+            t.level,
+            localize(target),
+            t.v1,
+            t.v2,
+        }}
+    end,
     can_appear = function(self)
         return G.GAME.spec_planets['baliatro_foil'].ever
     end,
@@ -60,6 +81,16 @@ SMODS.Consumable {
     config = { softlock=true, target="baliatro_holo", v1 = 2, initial_v1 = 10, moon = true, spec_extra = {ever = false}},
     pos = {x = 3, y = 0 },
     atlas = 'BaliatroPlanets',
+    loc_vars = function(self, info_queue, card)
+        local target = card.ability.target
+        local t = G.GAME.spec_planets[target]
+        return {vars={
+            t.level,
+            localize(target),
+            t.v1,
+            t.v2,
+        }}
+    end,
     can_appear = function(self)
         return G.GAME.spec_planets['baliatro_holo'].ever
     end,
@@ -81,6 +112,16 @@ SMODS.Consumable {
     config = { softlock=true, target="baliatro_polychrome", v1 = 0.02, initial_v1 = 1.5, moon = true, spec_extra = { remult = 1, ever = false }},
     pos = {x = 4, y = 0 },
     atlas = 'BaliatroPlanets',
+    loc_vars = function(self, info_queue, card)
+        local target = card.ability.target
+        local t = G.GAME.spec_planets[target]
+        return {vars={
+            t.level,
+            localize(target),
+            t.v1,
+            t.v2,
+        }}
+    end,
     can_appear = function(self)
         if not G.GAME.spec_planets['baliatro_polychrome'].ever then return false end
         local top = math.max(0, G.GAME.spec_planets['baliatro_polychrome'].level - 20)
@@ -105,6 +146,16 @@ SMODS.Consumable {
     config = { softlock=true, target="baliatro_photographic", v1 = 0.05, initial_v1 = 1.1, moon = true, spec_extra = {ever = false}},
     pos = {x = 5, y = 0 },
     atlas = 'BaliatroPlanets',
+    loc_vars = function(self, info_queue, card)
+        local target = card.ability.target
+        local t = G.GAME.spec_planets[target]
+        return {vars={
+            t.level,
+            localize(target),
+            t.v1,
+            t.v2,
+        }}
+    end,
     can_appear = function(self)
         if not G.GAME.spec_planets['baliatro_photographic'].ever then return false end
         local top = math.max(0, G.GAME.spec_planets['baliatro_photographic'].level - 10)
@@ -129,6 +180,16 @@ SMODS.Consumable {
     config = { softlock=true, target="baliatro_scenic", v1 = 0.3, initial_v1 = 0, moon = true, spec_extra = {ever = false}},
     pos = {x = 6, y = 0 },
     atlas = 'BaliatroPlanets',
+    loc_vars = function(self, info_queue, card)
+        local target = card.ability.target
+        local t = G.GAME.spec_planets[target]
+        return {vars={
+            t.level,
+            localize(target),
+            t.v1,
+            t.v2,
+        }}
+    end,
     can_appear = function(self)
         return G.GAME.spec_planets['baliatro_scenic'].ever
     end,
@@ -150,6 +211,16 @@ SMODS.Consumable {
     config = { target="baliatro_booster_pack_choices", v1 = 0.2, initial_v1 = 0, v2 = 0.1, initial_v2 = 0, moon = true},
     pos = {x = 7, y = 0 },
     atlas = 'BaliatroPlanets',
+    loc_vars = function(self, info_queue, card)
+        local target = card.ability.target
+        local t = G.GAME.spec_planets[target]
+        return {vars={
+            t.level,
+            localize(target),
+            t.v1,
+            t.v2,
+        }}
+    end,
     can_appear = function(self)
         -- artificially create scarcity over level 20
         local top = math.max(0, G.GAME.spec_planets['baliatro_booster_pack_choices'].level - 20)

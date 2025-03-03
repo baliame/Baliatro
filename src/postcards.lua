@@ -130,7 +130,6 @@ SMODS.Consumable {
 
 -- 2. Boston
 -- Add Photographic to a random joker. If you have no editionless Jokers, create a random Photographic Joker. (must have room)
--- Photographic: Multiplies multiplicative Mult granted by this Joker by X1.1
 SMODS.Consumable {
     set = "Postcard",
     key = "boston",
@@ -139,7 +138,7 @@ SMODS.Consumable {
 	pos = { x = 2, y = 0 },
     cost = 10,
     order = 2,
-    rarity = 3,
+    rarity = 2,
 
     loc_vars = function(self, info_queue, card)
         info_queue[#info_queue+1] = G.P_CENTERS.e_baliatro_photographic
@@ -231,7 +230,7 @@ SMODS.Consumable {
     end,
 
     can_use = function(self, card)
-        return #G.jokers.highlighted == 1 and (G.jokers.highlighted[1].config.center.new_york and G.jokers.highlighted[1].config.center.new_york.compatible and not G.jokers.highlighted[1].ability.mortgage)
+        return #G.jokers.highlighted == 1 and BALIATRO.manipulable(G.jokers.highlighted[1]) and (G.jokers.highlighted[1].config.center.new_york and G.jokers.highlighted[1].config.center.new_york.compatible and not G.jokers.highlighted[1].ability.mortgage)
     end,
 
     use = function(self, card, area, copier)
@@ -316,7 +315,7 @@ SMODS.Consumable {
             end
         end
         for i, joker in ipairs(G.jokers.cards) do
-            if joker ~= destroyed_joker then
+            if joker ~= destroyed_joker and BALIATRO.manipulable(joker) then
                 table.insert(joker_pool, joker)
             end
         end
@@ -690,7 +689,7 @@ SMODS.Consumable {
                         G.E_MANAGER:add_event(Event({trigger = 'after', delay = delay_events, blockable = true,
                         func = function()
                             local amt = card.ability.consumeable.booster_pack_slots * outcome
-                            G.GAME.shop_booster_packs = G.GAME.shop_booster_packs + amt
+                            SMODS.change_booster_limit(amt)
                             card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize{type='variable',key='a_baliatro_monte_carlo_booster_pack_slots',vars={amt}}})
                             -- todo: booster packs should immediately become available or disappear in shop
                             return true
@@ -908,7 +907,7 @@ SMODS.Consumable {
     can_use = function(self, card)
         if #G.jokers.highlighted > 0 and #G.jokers.highlighted <= card.ability.consumeable.max then
             for _, joker in ipairs(G.jokers.highlighted) do
-                if joker.ability.perishable then
+                if not BALIATRO.manipulable(joker) or joker.ability.perishable then
                     return false
                 end
             end

@@ -54,8 +54,10 @@ end
 
 BALIATRO.booster_pack_set_ability = function(self, card, initial, delay_sprites)
     local callisto = G.GAME.spec_planets["baliatro_booster_pack_choices"]
-    card.ability.extra = card.ability.extra + math.floor(callisto.c_v2)
-    card.ability.choose = card.ability.choose + math.floor(callisto.c_v1)
+    if not self.no_upgrade then
+        card.ability.extra = card.ability.extra + math.floor(callisto.c_v2)
+        card.ability.choose = card.ability.choose + math.floor(callisto.c_v1)
+    end
 end
 
 SMODS.Booster.set_ability = BALIATRO.booster_pack_set_ability
@@ -137,20 +139,24 @@ SMODS.calculate_context = function(context, return_table)
     end
     if context.pre_discard then
         local b = G.GAME.blind
-        if b and b.config and b.config.blind and b.config.blind.pre_discard and type(b.config.blind.pre_discard) == 'function' then
-            b.config.blind:pre_discard(context)
+        if b then
+            b:pre_discard(context)
         end
     end
     if context.discard and context.other_card then
         context.other_card.ability.discarded_this_ante = true
+        G.E_MANAGER:add_event(Event({
+            trigger = 'immediate',
+            func = function() G.GAME.blind:debuff_card(context.other_card); return true end
+        }))
     end
     if context.end_of_round then
         BALIATRO.end_of_round()
     end
     if context.after then
         local b = G.GAME.blind
-        if b and b.config and b.config.blind and b.config.blind.after_play and type(b.config.blind.after_play) == 'function' then
-            b.config.blind:after_play(context)
+        if b then
+            b:after_play(context)
         end
     end
 end
@@ -177,22 +183,6 @@ SMODS.has_no_suit = function(card)
     return has_no_suit and not has_any_suit
 end
 
-local segui = SMODS.Enhancement.generate_ui
-SMODS.Enhancement.generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
-    segui(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
-    if specific_vars then
-        if specific_vars.perma_mult and specific_vars.perma_mult > 0 then
-            localize{type = 'other', key = 'card_extra_mult', nodes = desc_nodes, vars = {specific_vars.perma_mult}}
-        end
-        if specific_vars.perma_dollars and specific_vars.perma_dollars > 0 then
-            localize{type = 'other', key = 'card_extra_dollars', nodes = desc_nodes, vars = {specific_vars.perma_dollars}}
-        end
-        if specific_vars.perma_xmult and specific_vars.perma_xmult ~= 1 then
-            localize{type = 'other', key = 'card_extra_xmult', nodes = desc_nodes, vars = {specific_vars.perma_xmult}}
-        end
-    end
-end
-
 local sas = SMODS.always_scores
 SMODS.always_scores = function(card)
     local ret = sas(card)
@@ -205,6 +195,21 @@ SMODS.always_scores = function(card)
 end
 
 SMODS.optional_features.cardareas.unscored = true
+
+SMODS.DrawStep:take_ownership('card_type_shader', {
+    func = function(self)
+        if not self.config.center.no_shine then
+            if (self.ability.set == 'Voucher' or self.config.center.demo) and (self.ability.name ~= 'Antimatter' or not (self.config.center.discovered or self.bypass_discovery_center)) then
+                if self:should_draw_base_shader() then
+                    self.children.center:draw_shader('voucher', nil, self.ARGS.send_to_shader)
+                end
+            end
+            if (self.ability.set == 'Booster' or self.ability.set == 'Spectral') and self:should_draw_base_shader() then
+                self.children.center:draw_shader('booster', nil, self.ARGS.send_to_shader)
+            end
+        end
+    end,
+}, true)
 
 return {
     name = 'Baliatro SMODS Overrides'
