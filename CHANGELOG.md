@@ -1,3 +1,21 @@
+# v0.2.0~pre7
+
+## ⚖️ Balance
+
+### Jokers
+
+- **Tax Collector** now subtracts $8 (from $6), effectively granting $1 for a three-suit hand and $4 for a four-suit hand, making it more on-par with vanilla Common economy options.
+
+## 🛠️ Bug Fixes
+
+### Jokers
+
+- Fix crash when **Real Estate** would appear in a shop or pack.
+
+### Blinds
+
+- Fixed various bugs with the new Blinds introduced.
+
 # v0.2.0~pre6
 
 ## Compatibility

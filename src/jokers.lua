@@ -1205,7 +1205,7 @@ SMODS.Joker {
     config = {
         extra = {
             dollars = 3,
-            lose = 6,
+            lose = 8,
             wilds = 0,
             suits = {},
             scoring = {},
@@ -3077,7 +3077,7 @@ SMODS.Joker {
     },
 
     in_pool = function(self, args)
-        return true, true
+        return true, {allow_duplicates = true}
     end,
 
     loc_vars = function(self, info_queue, card)
