@@ -10,7 +10,7 @@ BALIATRO.blind_uibox = function(blind)
 
     local badge = create_badge(blind_name, blind.boss_colour, G.C.WHITE, 1.2)
     badge.config.padding = 0.1
-    badge.nodes[1].config.minw = 3
+    badge.nodes[1].config.minw = 2.5
     badge.nodes[1].nodes[1].config.w = 0.08
     badge.nodes[1].nodes[3].config.w = 0.08
     ui_nodes[#ui_nodes+1] = badge
@@ -22,7 +22,7 @@ BALIATRO.blind_uibox = function(blind)
 
     local boss_nodes = {}
 
-    ui_nodes[#ui_nodes+1] = {n=G.UIT.R, config={align="tm"}, nodes={{n=G.UIT.C, config={align="tm", colour = G.C.WHITE, minh=1, padding = 0.05, r=0.1}, nodes = boss_nodes}}}
+    ui_nodes[#ui_nodes+1] = {n=G.UIT.R, config={align="tm"}, nodes={{n=G.UIT.C, config={minw = 2.5, align="tm", colour = G.C.WHITE, minh=1, padding = 0.05, r=0.1}, nodes = boss_nodes}}}
     boss_nodes[#boss_nodes+1] = {n=G.UIT.R, config={align="tm"}, nodes={{n=G.UIT.T, config={text=localize('ph_score_at_least'), scale = 0.35, colour=G.C.UI.TEXT_DARK}}}}
 
     local stake_sprite = get_stake_sprite(G.GAME and G.GAME.stake or 1, 0.5)

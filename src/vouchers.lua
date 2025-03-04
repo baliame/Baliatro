@@ -5,7 +5,7 @@ SMODS.Voucher:take_ownership('v_seed_money', {
         extra = 25,
     },
     loc_vars = function(self, info_queue, voucher)
-        info_queue[#info_queue+1] = {key='baliatro_interest_cap', set='Other', append_banned_set='Joker'}
+        info_queue[#info_queue+1] = {key='baliatro_interest_cap', set='Other'}
         return {vars={voucher.ability.extra}}
     end,
     redeem = function(self, voucher)
@@ -19,7 +19,7 @@ SMODS.Voucher:take_ownership('v_money_tree', {
         extra = 50,
     },
     loc_vars = function(self, info_queue, voucher)
-        info_queue[#info_queue+1] = {key='baliatro_interest_cap', set='Other', append_banned_set='Joker'}
+        info_queue[#info_queue+1] = {key='baliatro_interest_cap', set='Other'}
         return {vars={voucher.ability.extra}}
     end,
     redeem = function(self, voucher)

@@ -59,7 +59,7 @@ SMODS.Blind:take_ownership('bl_house', {
     end,
 
     stay_flipped = function(self, area, card)
-        return G.GAME.current_round.hands_played == 0 and G.GAME.current_round.discards_used == 0
+        return area == G.hand and G.GAME.current_round.hands_played == 0 and G.GAME.current_round.discards_used == 0
     end
 }, true)
 
@@ -84,7 +84,7 @@ SMODS.Blind:take_ownership('bl_wheel', {
     end,
 
     stay_flipped = function(self, area, card)
-        return pseudorandom(pseudoseed('wheel')) < G.GAME.probabilities.normal / self.flip_odds
+        return area == G.hand and pseudorandom(pseudoseed('wheel')) < G.GAME.probabilities.normal / self.config.flip_odds
     end
 }, true)
 
@@ -115,7 +115,7 @@ SMODS.Blind:take_ownership('bl_fish', {
     end,
 
     stay_flipped = function(self)
-        return G.GAME.blind.bl_fish and G.GAME.blind.bl_fish.prepped
+        return area == G.hand and G.GAME.blind.bl_fish and G.GAME.blind.bl_fish.prepped
     end,
 
     drawn_to_hand = function(self)
@@ -243,7 +243,7 @@ SMODS.Blind:take_ownership('bl_mark', {
     end,
 
     stay_flipped = function(self, area, card)
-        return card:is_face(true)
+        return area == G.hand and card:is_face(true)
     end
 }, true)
 

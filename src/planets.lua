@@ -16,7 +16,7 @@ SMODS.Consumable {
     pos = {x = 1, y = 0 },
     atlas = 'BaliatroPlanets',
     loc_vars = function(self, info_queue, card)
-        info_queue[#info_queue+1] = {key='baliatro_interest_cap', set='Other', append_banned_set='Joker'}
+        info_queue[#info_queue+1] = {key='baliatro_interest_cap', set='Other'}
         local target = card.ability.target
         local t = G.GAME.spec_planets[target]
         return {vars={

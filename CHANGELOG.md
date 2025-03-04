@@ -1,3 +1,16 @@
+# v0.2.0~pre8
+
+## 🛠️ Bug Fixes
+
+### Blinds
+
+- Fix crash during **The Wheel** blind.
+- Fix cards staying flipped when being played during **The House**, **The Wheel** or **The Fish**.
+
+### Cosmetic
+
+- Fix banned joker data being appended to some interest cap info boxes.
+
 # v0.2.0~pre7
 
 ## ⚖️ Balance
