@@ -114,7 +114,7 @@ SMODS.Blind:take_ownership('bl_fish', {
         G.GAME.blind.bl_fish = {prepped = true}
     end,
 
-    stay_flipped = function(self)
+    stay_flipped = function(self, area, card)
         return area == G.hand and G.GAME.blind.bl_fish and G.GAME.blind.bl_fish.prepped
     end,
 

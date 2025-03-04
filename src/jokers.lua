@@ -2135,7 +2135,7 @@ SMODS.Joker {
 }
 
 -- 50.
--- X1 Mult. Gains X0.35 Mult if played hand is most scored hand and contains the least scored rank, or the least scored hand and contains the most scored rank.
+-- X1 Mult. Gains X0.15 Mult if played hand is most scored hand and contains the least scored rank, or the least scored hand and contains the most scored rank.
 -- Uncommon
 SMODS.Joker {
     name = "Hadron Collider",
@@ -2147,7 +2147,7 @@ SMODS.Joker {
     config = {
         extra = {
             xmult = 1,
-            xmult_gain = 0.35,
+            xmult_gain = 0.2,
         }
     },
 

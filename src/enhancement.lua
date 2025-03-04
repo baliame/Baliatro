@@ -38,7 +38,7 @@ SMODS.Enhancement {
     atlas = 'BaliatroEnhance',
     pos = { x = 1, y = 0 },
     config = {
-        x_chips = 1.1,
+        x_chips = 1.2,
         mtx_value = 3,
     },
     weight = 2,
@@ -54,7 +54,7 @@ SMODS.Enhancement {
     pos = { x = 3, y = 0 },
     config = {
         p_dollars = -1,
-        x_chips = 1.2,
+        x_chips = 1.35,
         mtx_value = 5,
     },
     weight = 2,
@@ -70,7 +70,7 @@ SMODS.Enhancement {
     pos = { x = 4, y = 0 },
     config = {
         p_dollars = -1,
-        x_chips = 1.3,
+        x_chips = 1.5,
         mtx_value = 10,
     },
     weight = 2,
@@ -86,7 +86,7 @@ SMODS.Enhancement {
     pos = { x = 5, y = 0 },
     config = {
         p_dollars = -2,
-        x_chips = 1.5,
+        x_chips = 1.8,
         mtx_value = 20,
     },
     weight = 2,

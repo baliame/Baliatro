@@ -1,3 +1,23 @@
+# v0.2.0~pre9
+
+## ⚖️ Balance
+
+### Jokers
+
+- **Hadron Collider** now grants X0.2 per hand matching criteria played (from X0.35).
+  - In general, early Flush gameplans felt like they had a too easy time scaling this Joker compared to other scaling uncommon options. They still do, but hopefully this forces some hand expenditure.
+- **Microtransaction Cards** XChips output has been increased to 1.2, 1.35, 1.5, 1.8 respectively (from 1.1, 1.2, 1.3, 1.5).
+  - With the general negative effects of these cards on economy, it felt warranted to make them slightly stronger.
+  - This should counteract the devastating effects of losing 1-2 dollar per card for early plans.
+  - In general, lategame builds which aim to use Epic MTX cards as stabler alternatives to Glass cards will still find themselves struggling to keep up economically without proper planning.
+  - SMODS fix for Microtransaction cards is still pending (currently negative p_dollars on enhancement has no effect).
+
+## 🛠️ Bug Fixes
+
+### Blinds
+
+- Fix another crash with **The Fish** blind.
+
 # v0.2.0~pre8
 
 ## 🛠️ Bug Fixes
