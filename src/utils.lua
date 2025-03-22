@@ -181,15 +181,17 @@ end
 function BALIATRO.filter_visible_hands(args)
     local most = -1
     local least = -1
-    for k, v in pairs(G.GAME.hands) do
-        if v.visible then
-            if most == -1 or v.played > most then most = v.played end
-            if least == -1 or v.played < least then least = v.played end
-            end
+    if args and (args.exclude_least_played or args.exclude_most_played) then
+        for k, v in pairs(G.GAME.hands) do
+            if v.visible then
+                if most == -1 or v.played > most then most = v.played end
+                if least == -1 or v.played < least then least = v.played end
+                end
+        end
     end
     local ret = {}
     for k, v in pairs(G.GAME.hands) do
-        if v.visible and (v.played < most or (args and not args.exclude_most_played) or not args) and (v.played > least or (args and not args.exclude_least_played) or not args) then
+        if v.visible and (v.played < most or not args or not args.exclude_most_played) and (v.played > least or not args or not args.exclude_least_played) and (not args or args.exclude_key ~= k) then
             table.insert(ret, k)
         end
     end
@@ -490,8 +492,18 @@ function BALIATRO.end_of_round()
     G.GAME.audience_progress = (G.GAME.audience_progress or 0) + 1 / (G.GAME.audience_progress_per_round) + 0.001
 end
 
+function BALIATRO.calculate_goal_context(context)
+    for goal_key, goal_data in pairs(G.GAME.goal_trackers) do
+        if not goal_data.config.is_completed and not goal_data.config.is_failed then
+            local goal = BALIATRO.Goals[goal_key]
+            goal:calculate(goal_data.config, context)
+        end
+    end
+end
 
 function BALIATRO.setting_blind()
+
+
     local haunted = BALIATRO.collect_haunted()
     if #haunted > 0 then
         local transfers = BALIATRO.collect_haunted_targets(#haunted)
@@ -500,6 +512,22 @@ function BALIATRO.setting_blind()
         end
         for i, card in ipairs(transfers) do
             card:set_edition('e_baliatro_haunted', true, true)
+        end
+    end
+
+    if BALIATRO.feature_flags.loot then
+        if G.GAME.round_resets.blind == G.P_BLINDS.bl_small then
+            G.GAME.blind_idx = 1
+        elseif G.GAME.round_resets.blind == G.P_BLINDS.bl_big then
+            G.GAME.blind_idx = 2
+        else
+            G.GAME.blind_idx = 3
+        end
+
+        G.GAME.goal_trackers = {}
+        for goal_key, goal_data in pairs(G.GAME.ante_goals[G.GAME.blind_idx]) do
+            local goal = BALIATRO.Goals[goal_key]
+            G.GAME.goal_trackers[goal_key] = goal_data
         end
     end
 end
@@ -522,6 +550,10 @@ end
 
 function BALIATRO.is_plain(card)
     return card.debuff or (card.ability.set ~= 'Enhanced' and not card.seal and not card.edition)
+end
+
+function BALIATRO.is_saturated(card)
+    return not card.debuff and card.ability.set == 'Enhanced' and card.seal and card.edition
 end
 
 function BALIATRO.skeleton_card(card)
@@ -727,6 +759,52 @@ function BALIATRO.flip_set_ability(other_card, ability, affector)
         play_sound('tarot2', 1, 0.6)
         return true
     end }))
+end
+
+function BALIATRO.calculate_card_upgrade(context, card)
+    local wof = false
+    local upg = false
+    local center = card.config.center
+
+    for _, joker in ipairs(G.jokers.cards) do
+        local ev = eval_card(joker, context)
+        if ev and ev.jokers then
+            if ev.jokers.make_bad then wof = true end
+            if ev.jokers.upgrade then upg = true end
+        end
+    end
+    if wof then
+        card:set_ability(G.P_CENTERS['c_wheel_of_fortune'])
+        card.ability.eternal = nil
+        card.ability.perishable = nil
+        card.ability.rental = nil
+        for k, v in ipairs(SMODS.Sticker.obj_buffer) do
+            local sticker = SMODS.Stickers[v]
+            if sticker.should_apply and type(sticker.should_apply) == 'function' and not sticker:should_apply(card, center, card.area) then
+                sticker:apply(card, false)
+            end
+        end
+        card:set_edition(nil)
+    elseif upg and center.set == 'Joker' and center.upgrades_to then
+        card:set_ability(G.P_CENTERS[center.upgrades_to])
+    end
+end
+
+function BALIATRO.nrandom_elements(t, n, seed)
+    if type(seed) == 'string' then seed = pseudoseed(seed) end
+    local _t = {}
+    local tc = 0
+    for k, v in pairs(t) do _t[k] = v; tc = tc + 1 end
+    local ret = {}
+    repeat
+        local _v, _k = pseudorandom_element(_t, seed)
+        if _v then
+            ret[#ret+1] = {_v, _k}
+            _t[_k] = nil
+            tc = tc + 1
+        end
+    until not _v or #ret >= n or tc <= 0
+    return ret
 end
 
 return {

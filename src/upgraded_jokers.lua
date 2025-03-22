@@ -1,4 +1,4 @@
-SMODS.Atlas({key="BaliatroUp", path="BaliatroUpgraded.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"}):register()
+SMODS.Atlas({key="BaliatroUp", path="BaliatroUpgraded.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"})
 
 SMODS.Rarity {
     key = "upgraded",
@@ -616,7 +616,7 @@ SMODS.Joker {
             }
         end
 
-        if context.end_of_round and not context.repetition and context.game_over == false and not context.blueprint then
+        if context.end_of_round and context.game_over == false and not context.blueprint then
             -- Another pseudorandom thing, randomly generates a decimal between 0 and 1, so effectively a random percentage.
             if pseudorandom('goldfinger') < G.GAME.probabilities.normal / card.ability.extra.odds then
                 -- This part plays the animation.
@@ -1538,4 +1538,112 @@ SMODS.Joker {
     loc_vars = function(self, info_queue, card)
         return {vars={card.ability.extra.extra_cards}}
     end,
+}
+
+-- 33.
+-- Before scoring: Remove the Seal from the first scoring Sealed card and give that Seal to the two adjacent scoring cards. Remove the Edition from the first scoring non-Immortal Edition card and give that Edition to the two adjacent scoring cards.
+SMODS.Joker {
+    name = "Il Vaticano",
+    key = "il_vaticano",
+    config = {
+    },
+    pos = {
+        x = 0,
+        y = 0,
+    },
+    unlocked = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 6,
+    rarity = "baliatro_upgraded",
+    atlas = "BaliatroUp",
+
+    new_york = {
+        compatible = false,
+    },
+
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = {key='baliatro_immortal', set='Other'}
+        return {vars={}}
+    end,
+
+    calculate = function(self, card, context)
+        if context.blueprint then return end
+        local scorer = context.blueprint_card or card
+        --v:set_ability(G.P_CENTERS.c_base, nil, true)
+        if context.before then
+            local act = false
+            if #context.scoring_hand < 2 then
+                return
+            end
+
+            for i, other in ipairs(context.scoring_hand) do
+                if not other.debuff and other.seal then
+                    local seal = other:get_seal()
+                    local pointless = true
+                    if i > 1 then
+                        local prev = context.scoring_hand[i-1]
+                        if prev:get_seal() ~= seal then pointless = false end
+                    end
+
+                    if i < #context.scoring_hand then
+                        local next = context.scoring_hand[i+1]
+                        if next:get_seal() ~= seal then pointless = false end
+                    end
+
+                    if not pointless then
+                        other:set_seal(nil)
+                        if i > 1 then
+                            local prev = context.scoring_hand[i-1]
+                            prev:set_seal(seal)
+                        end
+                        if i < #context.scoring_hand then
+                            local next = context.scoring_hand[i+1]
+                            next:set_seal(seal)
+                        end
+                        act = true
+                    end
+                    break
+                end
+            end
+
+            for i, other in ipairs(context.scoring_hand) do
+                if not other.debuff and other.edition and not BALIATRO.is_immortal(other) then
+                    local e_key = other.edition.key
+                    local ed = other.edition
+                    local pointless = true
+                    if i > 1 then
+                        local prev = context.scoring_hand[i-1]
+                        if not prev.edition or prev.edition.key ~= e_key then pointless = false end
+                    end
+
+                    if i < #context.scoring_hand then
+                        local next = context.scoring_hand[i+1]
+                        if not next.edition or next.edition.key ~= e_key then pointless = false end
+                    end
+
+                    if not pointless then
+                        if i > 1 then
+                            local prev = context.scoring_hand[i-1]
+                            prev:set_edition(other.edition, true, true)
+                        end
+                        if i < #context.scoring_hand then
+                            local next = context.scoring_hand[i+1]
+                            next:set_edition(other.edition, true, true)
+                        end
+                        other:set_edition(nil, true, true)
+                        act = true
+                    end
+                    break
+                end
+            end
+
+            if act then
+                return {
+                    message = localize('k_baliatro_en_passant_ex'),
+                }
+            end
+        end
+    end
 }

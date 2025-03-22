@@ -11,11 +11,20 @@ end
 local ccj = Card.calculate_joker
 Card.calculate_joker = function(self, context)
     local o, t = ccj(self, context)
+    if not context.check_enhancement and context.individual and context.other_card.edition then
+        local edition = G.P_CENTERS[context.other_card.edition.key]
+        if edition.augment and type(edition.augment) == 'function' then
+            local aug_o, aug_t = edition:augment(self, context, o, t)
+            o = aug_o or o
+            t = aug_t or t
+        end
+    end
     if self.edition and not context.check_enhancement and not context.main_scoring and not context.blueprint and not context.blueprint_card then
         local edition = G.P_CENTERS[self.edition.key]
         if edition.augment and type(edition.augment) == 'function' then
             local aug_o, aug_t = edition:augment(self, context, o, t)
-            return aug_o or o, aug_t or t
+            o = aug_o or o
+            t = aug_t or t
         end
     end
     return o, t

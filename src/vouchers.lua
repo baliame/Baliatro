@@ -1,4 +1,4 @@
-SMODS.Atlas({key="BaliatroVoucher", path="BaliatroVoucher.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"}):register()
+SMODS.Atlas({key="BaliatroVoucher", path="BaliatroVoucher.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"})
 
 SMODS.Voucher:take_ownership('v_seed_money', {
     config = {

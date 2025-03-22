@@ -1,4 +1,4 @@
-SMODS.Atlas({key="Baliatro", path="Baliatro.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"}):register()
+SMODS.Atlas({key="Baliatro", path="Baliatro.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"})
 
 -- 1. Red Ulti
 -- Last played hand is a 7 Hearts High Card -> Win
@@ -48,7 +48,7 @@ SMODS.Joker {
             end
         elseif card.ability.extra.activated and context.destroying_card then
             return not context.blueprint and card.ability.extra.destroy == context.destroying_card
-        elseif context.end_of_round and not context.blueprint and card.ability.extra.activated and not context.repetition and not context.individual then
+        elseif context.end_of_round and not context.blueprint and card.ability.extra.activated and not context.individual then
             G.GAME.current_round.ulti = false
             G.E_MANAGER:add_event(Event({
                 func = function()
@@ -276,6 +276,8 @@ SMODS.Joker {
     },
 
     loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = G.P_CENTERS.e_foil
+        info_queue[#info_queue+1] = G.P_CENTERS.e_baliatro_faded_foil
         local foil = G.GAME.spec_planets["baliatro_foil"]
         local base_transfer = card.ability.extra.base_transfer + card.ability.extra.level_gain * (foil.level - 1)
         local subsequent_transfer = card.ability.extra.subsequent_transfer + card.ability.extra.level_subsequent_gain * (foil.level - 1)
@@ -288,7 +290,7 @@ SMODS.Joker {
             card.ability.extra.transfer = card.ability.extra.base_transfer + card.ability.extra.level_gain * (foil.level - 1)
         elseif context.cardarea == G.play and context.individual and context.other_card and context.other_card:is_foil() then
             local ret = {
-                transfer = card.ability.extra.transfer
+                baliatro_transfer = card.ability.extra.transfer
             }
             card.ability.extra.transfer = card.ability.extra.transfer * (card.ability.extra.subsequent_transfer + card.ability.extra.level_subsequent_gain * (foil.level - 1))
             return ret
@@ -337,6 +339,8 @@ SMODS.Joker {
     },
 
     loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = G.P_CENTERS.e_holo
+        info_queue[#info_queue+1] = G.P_CENTERS.e_baliatro_faded_holo
         local holo = G.GAME.spec_planets["baliatro_holo"]
         local dollars = math.floor(card.ability.extra.base_gain + (holo.level - 1) / card.ability.extra.level_divisor)
         return { vars = { (G.GAME.probabilities.normal or 1), card.ability.extra.odds, card.ability.extra.odds_add, dollars, card.ability.extra.level_divisor }}
@@ -594,6 +598,8 @@ SMODS.Joker {
     },
 
     loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = G.P_CENTERS.e_polychrome
+        info_queue[#info_queue+1] = G.P_CENTERS.e_baliatro_faded_polychrome
         local gain = (card.ability.extra.base_gain - 1) * 100
         return {vars = {gain}}
     end,
@@ -1390,7 +1396,7 @@ SMODS.Joker {
     },
 
     loc_vars = function(self, info_queue, card)
-        info_queue[#info_queue+1] = G.P_CENTERS["e_negative"]
+        info_queue[#info_queue+1] = G.P_CENTERS["e_negative_consumable"]
         info_queue[#info_queue+1] = G.P_CENTERS["e_baliatro_ephemeral"]
         return {vars={}}
     end,
@@ -1576,14 +1582,15 @@ SMODS.Joker {
 }
 
 -- 40.
--- Retrigger scoring Aces five times total. Retriggers are split evenly between all scoring cards of that rank. Rank changes each round (idol logic)
+-- Retrigger scoring Aces six times total. Retriggers are split evenly between all scoring cards of that rank, up to 3 per card. Rank changes each round (idol logic)
 -- Rare
 SMODS.Joker {
     name = "The Effigy",
     key = "effigy",
     config = {
         extra = {
-            retriggers = 5,
+            retriggers = 6,
+            max_per_card = 3,
         }
     },
     pos = {
@@ -1603,7 +1610,7 @@ SMODS.Joker {
     },
 
     loc_vars = function(self, info_queue, card)
-        return { vars = {card.ability.extra.retriggers, localize(G.GAME.current_round.effigy_card.rank, 'ranks')}}
+        return { vars = {card.ability.extra.retriggers, localize(G.GAME.current_round.effigy_card.rank, 'ranks'), card.ability.extra.max_per_card}}
     end,
 
     calculate = function(self, card, context)
@@ -1623,7 +1630,7 @@ SMODS.Joker {
             if cards > 0 then
                 for i, scoring_card in ipairs(context.scoring_hand) do
                     if scoring_card:get_id() == G.GAME.current_round.effigy_card.id then
-                        local upcoming = BALIATRO.round(rem / cards)
+                        local upcoming = math.min(card.ability.extra.max_per_card, BALIATRO.round(rem / cards))
                         cards = cards - 1
                         rem = rem - upcoming
                         reps[i] = upcoming
@@ -1774,8 +1781,8 @@ SMODS.Joker {
         extra = {
             xmult = 1,
             gain = 0.3,
-            lose = 0.2,
-            gain_hand = "Pair",
+            lose = 0.1,
+            gain_hand = nil,
             --lose_hand = "High Card"
         }
     },
@@ -1794,9 +1801,7 @@ SMODS.Joker {
 
     setab = function(self, card)
         local all = BALIATRO.collect_visible_hands()
-        local except_least = BALIATRO.filter_visible_hands{exclude_least_played = true}
-        local except_most = BALIATRO.filter_visible_hands{exclude_most_played = true}
-        if #except_least == 0 then except_least = all end
+        local except_most = BALIATRO.filter_visible_hands{exclude_most_played = true, exclude_key = card.ability.extra.gain_hand}
         if #except_most == 0 then except_most = all end
 
         card.ability.extra.gain_hand = pseudorandom_element(except_most, pseudoseed('scales'))
@@ -1855,8 +1860,8 @@ SMODS.Joker {
     name = "Sevenfold Avenger",
     key = "sevenfold_avenger",
     pos = {
-        x = 0,
-        y = 0,
+        x = 4,
+        y = 3,
     },
     config = {
         extra = {
@@ -2009,8 +2014,8 @@ SMODS.Joker {
     name = "The Favourite",
     key = "favourite",
     pos = {
-        x = 0,
-        y = 0,
+        x = 3,
+        y = 3,
     },
     config = {
         extra = {
@@ -2212,8 +2217,8 @@ SMODS.Joker {
     name = "Katamari Joker",
     key = "katamari_joker",
     pos = {
-        x = 0,
-        y = 0,
+        x = 8,
+        y = 3,
     },
     config = {
         extra = {
@@ -2265,8 +2270,8 @@ SMODS.Joker {
     name = "Romeo",
     key = "romeo",
     pos = {
-        x = 0,
-        y = 0,
+        x = 7,
+        y = 3,
     },
     config = {
         extra = {
@@ -2422,8 +2427,8 @@ SMODS.Joker {
         }
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 6,
+        y = 3,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -2528,7 +2533,7 @@ SMODS.Joker {
                     card = scorer,
                 }
             end
-        elseif context.repetition and not context.repetition_only and not card.ability.extra.activated and SMODS.has_enhancement(context.other_card, 'm_bonus') then
+        elseif context.repetition and not context.repetition_only and not card.ability.extra.activated and SMODS.has_enhancement(context.other_card, 'm_bonus') and context.cardarea == G.play then
             card.ability.extra.activated = true
             return {
                 message = localize('k_again_ex'),
@@ -2599,7 +2604,7 @@ SMODS.Joker {
                     card = scorer,
                 }
             end
-        elseif context.repetition and not context.repetition_only and not card.ability.extra.activated and SMODS.has_enhancement(context.other_card, 'm_mult') then
+        elseif context.repetition and not context.repetition_only and not card.ability.extra.activated and SMODS.has_enhancement(context.other_card, 'm_mult') and context.cardarea == G.play then
             card.ability.extra.activated = true
             return {
                 message = localize('k_again_ex'),
@@ -2646,7 +2651,7 @@ SMODS.Joker {
     },
 
     on_already_enhanced = function(joker, other_card, used_tarot)
-        other_card.ability.perma_dollars = (other_card.ability.perma_dollars or 0) + joker.ability.extra.bonus
+        other_card.ability.perma_p_dollars = (other_card.ability.perma_p_dollars or 0) + joker.ability.extra.bonus
     end,
 
     loc_vars = function(self, info_queue, card)
@@ -2670,7 +2675,7 @@ SMODS.Joker {
                     card = scorer,
                 }
             end
-        elseif context.repetition and not context.repetition_only and not card.ability.extra.activated and SMODS.has_enhancement(context.other_card, 'm_lucky') then
+        elseif context.repetition and not context.repetition_only and not card.ability.extra.activated and SMODS.has_enhancement(context.other_card, 'm_lucky') and context.cardarea == G.play then
             card.ability.extra.activated = true
             return {
                 message = localize('k_again_ex'),
@@ -2741,7 +2746,7 @@ SMODS.Joker {
                     card = scorer,
                 }
             end
-        elseif context.repetition and not context.repetition_only and not card.ability.extra.activated and SMODS.has_enhancement(context.other_card, 'm_stone') then
+        elseif context.repetition and not context.repetition_only and not card.ability.extra.activated and SMODS.has_enhancement(context.other_card, 'm_stone') and context.cardarea == G.play then
             card.ability.extra.activated = true
             return {
                 message = localize('k_again_ex'),
@@ -2803,7 +2808,7 @@ SMODS.Joker {
                     card = scorer,
                 }
             end
-        elseif context.repetition and not context.repetition_only and SMODS.has_enhancement(context.other_card, 'm_baliatro_resistant') then
+        elseif context.repetition and not context.repetition_only and SMODS.has_enhancement(context.other_card, 'm_baliatro_resistant') and context.cardarea == G.play then
             return {
                 message = localize('k_again_ex'),
                 repetitions = card.ability.extra.retriggers,
@@ -2822,8 +2827,8 @@ SMODS.Joker {
     config = {
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 9,
+        y = 2,
     },
     unlocked = true,
     blueprint_compat = false,
@@ -2832,6 +2837,7 @@ SMODS.Joker {
     cost = 4,
     rarity = 1,
     atlas = "Baliatro",
+    upgrades_to = "j_baliatro_il_vaticano",
 
     new_york = {
         compatible = false,
@@ -2842,6 +2848,7 @@ SMODS.Joker {
         local scorer = context.blueprint_card or card
         --v:set_ability(G.P_CENTERS.c_base, nil, true)
         if context.before then
+            local act = false
             if #context.scoring_hand < 2 then
                 return
             end
@@ -2871,6 +2878,8 @@ SMODS.Joker {
                             local next = context.scoring_hand[i+1]
                             next:set_ability(enh, nil, true)
                         end
+
+                        act = true
                     end
                     break
                 end
@@ -2890,19 +2899,27 @@ SMODS.Joker {
                         if next:get_seal() ~= seal then pointless = false end
                     end
 
-                    if pointless then return end
+                    if not pointless then
 
-                    other:set_seal(nil)
-                    if i > 1 then
-                        local prev = context.scoring_hand[i-1]
-                        prev:set_seal(seal)
-                    end
-                    if i < #context.scoring_hand then
-                        local next = context.scoring_hand[i+1]
-                        next:set_seal(seal)
+                        other:set_seal(nil)
+                        if i > 1 then
+                            local prev = context.scoring_hand[i-1]
+                            prev:set_seal(seal)
+                        end
+                        if i < #context.scoring_hand then
+                            local next = context.scoring_hand[i+1]
+                            next:set_seal(seal)
+                        end
+
+                        act = true
                     end
                     break
                 end
+            end
+            if act then
+                return {
+                    message = localize('k_baliatro_en_passant_ex'),
+                }
             end
         end
     end
@@ -2924,7 +2941,7 @@ SMODS.Joker {
     },
     pos = {
         x = 0,
-        y = 0,
+        y = 3,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -2995,8 +3012,8 @@ SMODS.Joker {
         },
     },
     pos = {
-        x = 0,
-        y = 0,
+        x = 1,
+        y = 3,
     },
     unlocked = true,
     blueprint_compat = true,
@@ -3081,6 +3098,7 @@ SMODS.Joker {
     end,
 
     loc_vars = function(self, info_queue, card)
+		info_queue[#info_queue+1] = {key = "baliatro_unbound", set="Other"}
         return { vars = {(G.GAME and G.GAME.real_estate) or 1.5, card.ability.extra.xmult_gain}}
     end,
 
@@ -3163,6 +3181,7 @@ SMODS.Joker {
             created_amount = 2,
             created_card = "c_devil",
             created_type = "Tarot",
+            mult = 8,
         }
     },
 
@@ -3180,7 +3199,7 @@ SMODS.Joker {
 
     loc_vars = function(self, info_queue, card)
         info_queue[#info_queue+1] = G.P_CENTERS['c_devil']
-        return {vars = {card.ability.extra.created_amount}}
+        return {vars = {card.ability.extra.created_amount, card.ability.extra.mult}}
     end,
 
     calculate = function(self, card, context)
@@ -3207,6 +3226,12 @@ SMODS.Joker {
                     message = localize('k_plus_tarot'),
                     card = context.blueprint_card or card,
                     colour = G.C.SECONDARY_SET.Tarot,
+                }
+            end
+        elseif context.individual and context.cardarea == G.hand then
+            if SMODS.has_enhancement(context.other_card, 'm_gold') then
+                return {
+                    mult = card.ability.extra.mult
                 }
             end
         end
@@ -3304,8 +3329,8 @@ SMODS.Joker {
     key = "echo",
 
     pos = {
-        x = 0,
-        y = 0,
+        x = 8,
+        y = 2,
     },
     config = {
         h_size = 1
@@ -3365,8 +3390,8 @@ SMODS.Joker {
     key = "monolith",
 
     pos = {
-        x = 0,
-        y = 0,
+        x = 2,
+        y = 3,
     },
     config = {
         extra = {
@@ -3454,8 +3479,8 @@ SMODS.Joker {
     key = "whale",
 
     pos = {
-        x = 0,
-        y = 0,
+        x = 5,
+        y = 3,
     },
     config = {
         extra = {
@@ -3694,6 +3719,271 @@ SMODS.Joker {
         end
     end
 }
+
+-- 75.
+-- Before scoring, permanently grant the leftmost scored card chips equal to the base chip value of all other scored cards. After scoring, non-Leftmost cards permanently lose chips equal to their base chip value.
+SMODS.Joker {
+    name = "All In",
+    key = "all_in",
+
+    pos = {
+        x = 0,
+        y = 0,
+    },
+    config = {
+    },
+
+    new_york = {
+        compatible = false,
+    },
+
+    unlocked = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 4,
+    rarity = 1,
+    atlas = "Baliatro",
+
+    calculate = function(self, card, context)
+        if context.before and context.cardarea == G.jokers then
+            local sum = 0
+            for i, other in ipairs(context.scoring_hand) do
+                if i ~= 1 then sum = sum + other.base.nominal end
+            end
+
+            if sum > 0 then
+                context.scoring_hand[1].ability.perma_bonus = (context.scoring_hand[1].ability.perma_bonus or 0) + sum
+                return {
+                    message = localize('k_upgrade_ex'),
+                    message_card = context.scoring_hand[1],
+                }
+            end
+        elseif context.after and #context.scoring_hand > 1 then
+            for i, other in ipairs(context.scoring_hand) do
+                if i ~= 1 then other.ability.perma_bonus = (other.ability.perma_bonus or 0) - other.base.nominal end
+            end
+
+            return {
+                message = localize('k_downgrade_ex'),
+            }
+        end
+    end
+}
+
+-- 76. The Elephant
+-- Retrigger the first Gold card held in hand. Devils played on Enhanced cards permanently add X1.05 Chips when held in hand to that card instead of enhancing it.
+-- Uncommon
+SMODS.Joker {
+    name = "The Elephant",
+    key = "elephant",
+    config = {
+        extra = {
+            retriggers = 1,
+            bonus = 0.05,
+
+            overrides_consumeable = "c_devil",
+            activated = false,
+        },
+    },
+    pos = {
+        x = 0,
+        y = 0,
+    },
+    unlocked = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 5,
+    rarity = 2,
+    atlas = "Baliatro",
+
+    new_york = {
+        compatible = true,
+        ignore_extra_fields = {}
+    },
+
+    on_already_enhanced = function(joker, other_card, used_tarot)
+        other_card.ability.perma_h_x_chips = (other_card.ability.perma_h_x_chips or 1) + joker.ability.extra.bonus
+    end,
+
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = G.P_CENTERS[card.ability.extra.overrides_consumeable]
+        return { vars = {card.ability.extra.retriggers, card.ability.extra.bonus }}
+    end,
+
+    calculate = function(self, card, context)
+        if context.blueprint then return end
+        local scorer = context.blueprint_card or card
+        if (context.before or context.end_of_round) and context.cardarea == G.jokers and not context.blueprint then
+            card.ability.extra.activated = false
+        elseif context.repetition and not context.repetition_only and not card.ability.extra.activated and SMODS.has_enhancement(context.other_card, 'm_gold') and context.cardarea == G.hand then
+            card.ability.extra.activated = true
+            return {
+                message = localize('k_again_ex'),
+                repetitions = card.ability.extra.retriggers,
+                card = scorer
+            }
+        end
+    end
+}
+
+-- 77.
+-- X5 Mult. Loses X0.5 Mult after any hand with a scoring non-Plain card is scored.
+-- Uncommon
+SMODS.Joker {
+    name = "Vanilla Beans",
+    key = "vanilla_beans",
+    config = {
+        extra = {
+            xmult = 5,
+            lose_xmult = 0.5,
+        },
+    },
+    pos = {
+        x = 0,
+        y = 0,
+    },
+    unlocked = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 5,
+    rarity = 2,
+    atlas = "Baliatro",
+
+    new_york = {
+        compatible = true,
+        ignore_extra_fields = {}
+    },
+
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = {key='baliatro_plain', set='Other'}
+        return { vars = {card.ability.extra.xmult, card.ability.extra.lose_xmult }}
+    end,
+
+    calculate = function(self, card, context)
+        if context.joker_main then
+            return {
+                xmult = card.ability.extra.xmult
+            }
+        elseif context.after and not context.blueprint then
+            for _, other in ipairs(context.scoring_hand) do
+                if not BALIATRO.is_plain(other) then
+                    card.ability.extra.xmult = card.ability.extra.xmult - card.ability.extra.lose_xmult
+                    if card.ability.extra.xmult > 1 then
+                        return {
+                            message = localize('k_downgrade_ex'),
+                        }
+                    else
+                        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.15, func = function()
+                            card:start_dissolve()
+                            return true
+                        end}))
+
+                        return {
+                            message = localize('k_eaten_ex')
+                        }
+                    end
+                end
+            end
+        end
+    end
+}
+
+-- 78.
+-- Saturated cards held in hand grant X1 Chips, and an additional X0.2 Chips for each plain card in scoring hand.
+-- Rare
+SMODS.Joker {
+    name = "Blank Card",
+    key = "blank_card",
+    config = {
+        extra = {
+            xchips = 1,
+            xchips_per_plain = 0.25,
+            _xchips = 1,
+        },
+    },
+    pos = {
+        x = 9,
+        y = 3,
+    },
+    unlocked = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 8,
+    rarity = 3,
+    atlas = "Baliatro",
+
+    new_york = {
+        compatible = true,
+        ignore_extra_fields = {}
+    },
+
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = {key='baliatro_plain', set='Other'}
+        info_queue[#info_queue+1] = {key='baliatro_saturated', set='Other'}
+        return { vars = {card.ability.extra.xchips, card.ability.extra.xchips_per_plain }}
+    end,
+
+    calculate = function(self, card, context)
+        if context.before then
+            card.ability.extra._xchips = card.ability.extra.xchips
+            for i, other in ipairs(context.scoring_hand) do
+                if BALIATRO.is_plain(other) then
+                    card.ability.extra._xchips = card.ability.extra._xchips + card.ability.extra.xchips_per_plain
+                end
+            end
+        elseif not context.end_of_round and context.individual and context.cardarea == G.hand and BALIATRO.is_saturated(context.other_card) and card.ability.extra._xchips ~= 1 then
+            return {
+                xchips = card.ability.extra._xchips
+            }
+        end
+    end
+}
+
+-- 79.
+-- Gain 3% of your total Chips as Mult.
+-- Uncommon
+SMODS.Joker {
+    name = "Frequent Flyer Card",
+    key = "frequent_flyer_card",
+    config = {
+        extra = {
+            chips_as_mult = 0.03,
+        },
+    },
+    pos = {
+        x = 0,
+        y = 4,
+    },
+    unlocked = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    cost = 6,
+    rarity = 3,
+    atlas = "Baliatro",
+
+    new_york = {
+        compatible = true,
+        ignore_extra_fields = {}
+    },
+
+    loc_vars = function(self, info_queue, card)
+        return { vars = {card.ability.extra.chips_as_mult * 100 }}
+    end,
+
+    calculate = function(self, card, context)
+        if context.joker_main then
+            return {
+                baliatro_chips_as_mult = card.ability.extra.chips_as_mult
+            }
+        end
+    end
+}
+
 
 return {
     name = "Baliatro Jokers",

@@ -1,4 +1,4 @@
-SMODS.Atlas({key="BaliatroPlanets", path="BaliatroPlanets.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"}):register()
+SMODS.Atlas({key="BaliatroPlanets", path="BaliatroPlanets.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"})
 
 SMODS.Booster:take_ownership('p_celestial_normal_1', {config = {extra = 4, choose = 1}}, true)
 SMODS.Booster:take_ownership('p_celestial_normal_2', {config = {extra = 4, choose = 1}}, true)
@@ -78,7 +78,7 @@ SMODS.Consumable {
 SMODS.Consumable {
     set = 'Planet',
     key = 'phobos',
-    config = { softlock=true, target="baliatro_holo", v1 = 2, initial_v1 = 10, moon = true, spec_extra = {ever = false}},
+    config = { softlock=true, target="baliatro_holo", v1 = 5, initial_v1 = 10, moon = true, spec_extra = {ever = false}},
     pos = {x = 3, y = 0 },
     atlas = 'BaliatroPlanets',
     loc_vars = function(self, info_queue, card)

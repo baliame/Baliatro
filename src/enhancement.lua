@@ -1,4 +1,4 @@
-SMODS.Atlas({key="BaliatroEnhance", path="BaliatroEnhance.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"}):register()
+SMODS.Atlas({key="BaliatroEnhance", path="BaliatroEnhance.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"})
 
 
 SMODS.Enhancement:take_ownership('m_stone', {
@@ -16,19 +16,18 @@ SMODS.Enhancement {
     atlas = 'BaliatroEnhance',
     pos = { x = 0, y = 0 },
     config = {
-        mult = -2,
         cannot_be_debuffed = true,
-        mult_gain = -0.1
+        mult_gain = -0.25,
     },
     weight = 2,
 
     loc_vars = function(self)
-        return {vars = {self.config.mult, self.config.mult_gain}}
+        return {vars = {self.config.mult_gain}}
     end,
 
     calculate = function(self, card, context)
         if context.main_scoring and context.cardarea == G.play then
-            card.ability.mult = card.ability.mult + card.ability.mult_gain
+            card.ability.perma_mult = card.ability.perma_mult + card.ability.mult_gain
         end
     end,
 }

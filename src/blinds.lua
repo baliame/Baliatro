@@ -1,4 +1,4 @@
-SMODS.Atlas({key="BaliatroBlinds", path="BaliatroBlinds.png", px = 34, py = 34, atlas_table="ANIMATION_ATLAS", frames=21}):register()
+SMODS.Atlas({key="BaliatroBlinds", path="BaliatroBlinds.png", px = 34, py = 34, atlas_table="ANIMATION_ATLAS", frames=21})
 
 BALIATRO.blind_uibox = function(blind)
     local ui_nodes = {}
@@ -469,14 +469,16 @@ SMODS.Blind {
     end,
 
     after_discard = function(self)
-        for k, card in ipairs(G.hand) do
-            card.ability.turquoise_ladder = true
-            G.GAME.blind:debuff_card(card)
+        for k, card in ipairs(G.hand.cards) do
+            if not card.highlighted then
+                card.ability.turquoise_ladder = true
+                G.GAME.blind:debuff_card(card)
+            end
         end
     end,
 
     after_play = function(self)
-        for k, card in ipairs(G.hand) do
+        for k, card in ipairs(G.hand.cards) do
             card.ability.turquoise_ladder = true
             G.GAME.blind:debuff_card(card)
         end

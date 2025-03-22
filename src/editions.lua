@@ -252,7 +252,8 @@ SMODS.Edition {
     end,
 
     augment = function(self, card, context, o, t)
-        local trigger_keys = {'chips', 'h_chips', 'chip_mod', 'mult', 'h_mult', 'mult_mod', 'x_mult', 'Xmult', 'xmult', 'x_mult_mod', 'Xmult_mod', 'h_x_chips', 'h_x_mult', 'p_dollars', 'dollars', 'h_dollars'}
+        local trigger_keys = {'chips', 'h_chips', 'chip_mod', "xchips", "x_chips", "Xchip_mod", 'mult', 'h_mult', 'mult_mod', 'x_mult', 'Xmult', 'xmult', 'x_mult_mod', 'Xmult_mod', 'h_x_chips', 'h_x_mult', 'p_dollars', 'dollars', 'h_dollars'}
+        if context.end_of_round then return o, t end
         if o and not context.blueprint then
             local ed_level = G.GAME.spec_planets["baliatro_photographic"]
             local mult = ed_level.c_v1
@@ -352,7 +353,8 @@ SMODS.Edition {
 
     augment = function(self, card, context, o, t)
         if context.check_enhancement or not(context.edition or context.individual or context.main_scoring or context.repetition or context.joker_main or context.end_of_round) or not o then return o, t end
-        local trigger_keys = {'chips', 'h_chips', 'chip_mod', 'mult', 'h_mult', 'mult_mod', 'x_mult', 'Xmult', 'xmult', 'x_mult_mod', 'Xmult_mod', 'p_dollars', 'dollars', 'h_dollars', 'level_up', 'repetitions'}        local valid = false
+        local trigger_keys = {'chips', 'h_chips', 'chip_mod', "xchips", "x_chips", "Xchip_mod", 'mult', 'h_mult', 'mult_mod', 'x_mult', 'Xmult', 'xmult', 'x_mult_mod', 'Xmult_mod', 'h_x_chips', 'h_x_mult', 'p_dollars', 'dollars', 'h_dollars', 'level_up', 'repetitions', 'swap', 'func'}
+        local valid = false
         for i, tk in ipairs(trigger_keys) do
             if o[tk] then
                 valid = true

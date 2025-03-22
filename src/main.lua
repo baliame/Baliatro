@@ -1,4 +1,8 @@
-BALIATRO = {}
+BALIATRO = {
+    feature_flags = {
+        loot = false
+    }
+}
 
 function load_file(file)
     print("Loading file " .. file)
@@ -7,8 +11,13 @@ function load_file(file)
 		error("Error loading file: " .. err)
         return nil
     end
-    return f()
+    return f and f() or nil
 end
+
+-- Load UI library
+load_file('ui/uibox.lua')
+load_file('ui/tab_dialog.lua')
+load_file('ui/tab.lua')
 
 -- Load BALIATRO
 load_file('utils.lua')
@@ -22,6 +31,7 @@ load_file('overrides/voucher.lua')
 load_file('overrides/blind.lua')
 
 -- Load whatever in whatever order
+load_file('loot.lua')
 load_file('stickers.lua')
 load_file('editions.lua')
 load_file('planets.lua')

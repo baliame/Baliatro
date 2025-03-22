@@ -196,42 +196,41 @@ return {
             m_baliatro_resistant = {
                 name = 'Resistant Card',
                 text = {
-                    '{C:mult}#1#{} Mult',
                     'Permanently gains',
-                    '{C:mult}#2#{} Mult when scored.',
+                    '{C:mult}#1#{} Mult when scored.',
                     'Cannot be {C:red}debuffed{}',
                 },
             },
             m_baliatro_mtx_common = {
-                name = 'Microtransaction Card',
+                name = 'MTX Card',
                 text = {
-                    'Free tier Microtransaction.',
+                    'Free tier MTX.',
                     '{X:chips,C:white}X#1#{} Chips',
                     '{C:attention}Value:{} {C:money}$#2#{}',
                 },
             },
             m_baliatro_mtx_uncommon = {
-                name = 'Microtransaction Card',
+                name = 'MTX Card',
                 text = {
-                    '{C:green}Uncommon{} tier Microtransaction.',
+                    '{C:green}Uncommon{} tier MTX.',
                     '{X:chips,C:white}X#2#{} Chips',
                     '{C:money}-$#1#{} when scored',
                     '{C:attention}Value:{} {C:money}$#3#{}',
                 },
             },
             m_baliatro_mtx_rare = {
-                name = 'Microtransaction Card',
+                name = 'MTX Card',
                 text = {
-                    '{C:blue}Rare{} tier Microtransaction.',
+                    '{C:blue}Rare{} tier MTX.',
                     '{X:chips,C:white}X#2#{} Chips',
                     '{C:money}-$#1#{} when scored',
                     '{C:attention}Value:{} {C:money}$#3#{}',
                 },
             },
             m_baliatro_mtx_epic = {
-                name = 'Microtransaction Card',
+                name = 'MTX Card',
                 text = {
-                    '{C:tarot}Epic{} tier Microtransaction.',
+                    '{C:tarot}Epic{} tier MTX.',
                     '{X:chips,C:white}X#2#{} Chips',
                     '{C:money}-$#1#{} when scored',
                     '{C:attention}Value:{} {C:money}$#3#{}',
@@ -293,7 +292,7 @@ return {
                 text = {
                     '{C:mult}+#2#{} Mult. Remove any upgradable',
                     '{C:dark_edition}Edition{} from scored playing cards.',
-                    'For each {C:attention}Edition{} type removed in a hand,',
+                    'For each {C:dark_edition}Edition{} type removed in a hand,',
                     'upgrade that edition by {C:attention}#1#{} level.',
                     'Gains {C:mult}+#3#{} Mult per edition removed.'
                 }
@@ -302,7 +301,7 @@ return {
                 ['name'] = 'Pumpjack',
                 ['text'] = {
                     [1] = 'Transfer up to #1# {C:mult}Mult{} to {C:chips}Chips{} when',
-                    [2] = 'a played {C:attention}Foil{} card is scored.',
+                    [2] = 'a played {C:dark_edition}Foil{} card is scored.',
                     [3] = 'Each repeat within the same hand is {X:mult,C:white}X#2#{}',
                     [4] = 'higher than the previous one.',
                     [5] = '{C:inactive}(at least 1 {C:mult}Mult{C:inactive} will remain){}',
@@ -339,8 +338,8 @@ return {
             j_baliatro_parade = {
                 ['name'] = 'Parade',
                 ['text'] = {
-                    [1] = "{C:attention}Polychrome{} bonus increases by {C:mult}#1#%{}",
-                    [2] = "for that hand only each time a {C:attention}Wild Card{} is scored.",
+                    [1] = "{C:attention}Polychrome{} bonus increases by {C:mult}#1#%{} for that",
+                    [2] = "hand only each time a {C:attention}Wild Card{} is scored.",
                 }
             },
             j_baliatro_slot_machine = {
@@ -387,8 +386,8 @@ return {
                     '{C:mult}+#1#{} Mult.',
                     'If scored hand is {C:attention}Pair{}, destroy a played,',
                     'unscored card. Gains {C:mult}+#2#{} Mult on trigger.',
-                    'Add a random playing card of the deck at end of round',
-                    'if this effect did not trigger.',
+                    'Add a random playing card of the deck at end',
+                    'of round if this effect did not trigger.',
                     '{C:inactive}(Once per round){}',
                 },
             },
@@ -441,16 +440,20 @@ return {
             j_baliatro_bibimbap = {
                 name = 'Bibimbap',
                 text = {
-                    '{X:mult,C:white}X#1#{} Mult.',
+                    '{X:mult,C:white}X#1#{} Mult',
                     '-{X:mult,C:white}X#2#{} Mult, when you {C:attention}reroll{} the shop.',
                 },
             },
             j_baliatro_effigy = {
                 name = 'Effigy',
                 text = {
-                    'Retrigger scoring {C:attention}#2#{} rank cards {C:attention}#1#{} times total.',
-                    'Retriggers are split evenly between all scoring cards of that rank.',
-                    'Rank changes each round {C:inactive}(influenced by cards in deck){}',
+                    'Retrigger scoring {C:attention}#2#{}',
+                    'rank cards {C:attention}#1#{} times total.',
+                    'This card may only retrigger each',
+                    'played card up to {C:attention}#3#{} times.',
+                    'Retriggers are split evenly between',
+                    'all scoring cards of that rank.',
+                    '{s:0.7}Rank changes each round, influenced by cards in deck{}',
                 },
             },
             j_baliatro_chef_joker = {
@@ -706,7 +709,8 @@ return {
                 text = {
                     "If played hand is {C:attention}Three of a Kind{}",
                     "of {C:attention}6{}, and has no other cards",
-                    "create {C:attention}#1#{} {C:tarot}Devil{}"
+                    "create {C:attention}#1#{} {C:tarot}Devil{}. {C:money}Gold cards{} held",
+                    "in hand grant {C:mult}+#2#{} Mult."
                 },
             },
             j_baliatro_afterimage = {
@@ -731,7 +735,7 @@ return {
             j_baliatro_monolith = {
                 name = "Monolith",
                 text = {
-                    "{C:attention}+#1#{} Mult if",
+                    "{C:mult}+#1#{} Mult if",
                     "hand played is not",
                     "your {C:attention}most played hand{}",
                 },
@@ -739,7 +743,7 @@ return {
             j_baliatro_sicilian_defence = {
                 name = "Sicilian Defence",
                 text = {
-                    "{C:attention}+#1#{} Mult if",
+                    "{C:mult}+#1#{} Mult if",
                     "all cards in scored",
                     "hand are {C:attention}plain{}",
                 },
@@ -750,14 +754,14 @@ return {
                     "{C:money}-$#1#{} each hand played.",
                     "After hand is scored, a",
                     "random scoring unenhanced card",
-                    "becomes a {C:attention}Microtransaction{} Card."
+                    "becomes a {C:attention}MTX{} Card."
                 },
             },
             j_baliatro_vapor_marketplace = {
                 name = "Vapor Marketplace",
                 text = {
                     "After hand is scored, remove",
-                    "{C:attention}Microtransaction{} enhancements",
+                    "{C:attention}MTX{} enhancements",
                     "from all scored cards and gain",
                     "dollars based on their value."
                 },
@@ -765,10 +769,52 @@ return {
             j_baliatro_battle_pass = {
                 name = "Battle Pass",
                 text = {
-                    "{C:money}-$#1#{} when {C:attention}Blind{}.",
-                    "is selected. At the end of round,",
-                    "some unenhanced cards in deck may",
-                    "become {C:attention}Microtransaction{} cards."
+                    "{C:money}-$#1#{} when {C:attention}Blind{} is selected.",
+                    "At the end of round, some unenhanced",
+                    "cards in deck may become",
+                    "{C:attention}MTX{} cards."
+                },
+            },
+            j_baliatro_all_in = {
+                name = "All In",
+                text = {
+                    "Before scoring, permanently grant the {C:attention}leftmost{}",
+                    "scored card {C:chips}chips{} equal to the {C:chips}base chip value{}",
+                    "of all other scored cards. After scoring,",
+                    "{C:attention}non-leftmost{} cards permanently lose {C:chips}chips{}",
+                    "equal to their {C:chips}base chip value{}.",
+                },
+            },
+            j_baliatro_elephant = {
+                name = "The Elephant",
+                text = {
+                    'Retrigger the first {C:attention}Gold{} card held in hand',
+                    '{C:tarot}Devil{} played on any {C:attention}Enhanced{} card instead',
+                    'permanently adds {X:chips,C:white}+X#2#{} Chips when held in',
+                    'hand to that card.',
+                },
+            },
+            j_baliatro_vanilla_beans = {
+                name = "Vanilla Beans",
+                text = {
+                    '{X:mult,C:white}X#1#{} Mult. Loses {X:mult,C:white}X#2#{} Mult after any',
+                    'hand with a scoring non-{C:attention}Plain{} card',
+                    'is scored.',
+                },
+            },
+            j_baliatro_blank_card = {
+                name = "Blank Card",
+                text = {
+                    '{C:attention}Saturated{} cards held in hand grant',
+                    '{X:chips,C:white}X#1#{} Chips, and an additional {X:chips,C:white}X#2#{} Chips',
+                    'for each {C:attention}Plain{} card in scoring hand.',
+                },
+            },
+            j_baliatro_frequent_flyer_card = {
+                name = "Frequent Flyer Card",
+                text = {
+                    'Gain {C:chips}#1#%{} of your',
+                    'total Chips as Mult.',
                 },
             },
             -- upgraded jokers
@@ -1031,6 +1077,18 @@ return {
                     "{C:inactive}increase the number of cards used{}",
                 },
             },
+            j_baliatro_il_vaticano = {
+                name = "Il Vaticano",
+                text = {
+                    'Before scoring, remove the {C:attention}Seal{} ',
+                    'from the first scoring {C:attention}Sealed{} card',
+                    'and give it to the two adjacent scoring cards,',
+                    'then remove the {C:dark_edition}Edition{} from the first',
+                    'scoring non-{C:attention}Immortal{} {C:dark_edition}Edition{} card and give',
+                    'it to the two adjacent scoring cards.',
+                    '{C:inactive}(does not remove edition or seal if pointless){}'
+                },
+            },
             -- Pacts and Punishment
             j_baliatro_punishment_devils_scorn = {
                 name = "The Devil's Scorn",
@@ -1178,6 +1236,59 @@ return {
                     "{s:0.7,C:red}On average. Statistically. Over some indeterminate timeframe.{}",
                 },
             },
+            j_baliatro_pact_unseen_plenty = {
+                name = "Unseen Plenty",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}Create a copy of any non-legendary Tarot,{}",
+                    "{C:dark_edition}Planet or Spectral card used in a Booster Pack.{}",
+                    "{C:inactive}(must have room){}"
+                },
+            },
+            j_baliatro_pact_dangerous_plenty = {
+                name = "Dangerous Plenty",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}Create a copy of any non-legendary Tarot,{}",
+                    "{C:dark_edition}Planet or Spectral card used in a Booster Pack.{}",
+                    "{C:inactive}(must have room){}"
+                },
+            },
+            j_baliatro_pact_treacherous_plenty = {
+                name = "Treacherous Plenty",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:dark_edition}Create a copy of any non-legendary Tarot,{}",
+                    "{C:dark_edition}Planet or Spectral card used in a Booster Pack.{}",
+                    "{C:inactive}(must have room){}",
+                    "{s:0.7,C:red}X#1# to the base cost of all Booster Packs.{}",
+                },
+            },
+            j_baliatro_pact_unseen_craftmanship = {
+                name = "Unseen Craftmanship",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:green}#1# in #2# chance{C:dark_edition} for upgradable Jokers in{}",
+                    "{C:dark_edition}shop to be sold already upgraded.{}",
+                },
+            },
+            j_baliatro_pact_dangerous_craftmanship = {
+                name = "Dangerous Craftmanship",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:green}#1# in #2# chance{C:dark_edition} for upgradable Jokers in{}",
+                    "{C:dark_edition}shop to be sold already upgraded.{}",
+                },
+            },
+            j_baliatro_pact_treacherous_craftmanship = {
+                name = "Treacherous Craftmanship",
+                text = {
+                    "{s:1.2,C:red}Deal with the Devil{}",
+                    "{C:green}#1# in #2# chance{C:dark_edition} for upgradable Jokers in{}",
+                    "{C:dark_edition}shop to be sold already upgraded.{}",
+                    "{s:0.7,C:red}#1# in #3# chance for any card in shop to become Wheel of Fortune{}",
+                },
+            },
             -- Override jokers
             j_to_the_moon={
                 name="To the Moon",
@@ -1232,6 +1343,13 @@ return {
                     "{C:red}Currently banned Jokers:{}"
                 },
             },
+            baliatro_unbound = {
+                name = "Unbound",
+                text = {
+                    "Duplicates of this card",
+                    "can always appear.",
+                },
+            },
             baliatro_immortal = {
                 name = "Immortal",
                 text = {
@@ -1252,6 +1370,14 @@ return {
                     "Cards with no {C:dark_edition}Edition{}, {C:attention}Seal{},",
                     "or {C:blue}Enhancement{} are considered",
                     "plain. {C:red}Debuffed{} cards are plain."
+                },
+            },
+            baliatro_saturated = {
+                name = "Saturated",
+                text = {
+                    "Cards with an {C:dark_edition}Edition{}, {C:attention}Seal{},",
+                    "and {C:blue}Enhancement{} are considered",
+                    "saturated. {C:red}Debuffed{} cards are never saturated."
                 },
             },
             baliatro_original_base = {
@@ -1371,7 +1497,7 @@ return {
                 name = "Las Vegas",
                 text = {
                     "Create a {C:attention}Transcendence{}, {C:spectral}Soul{}, {C:planet}Black Hole{},",
-                    "or {C:attention}Eternal{} {C:blue}Foil{} Obelisk.",
+                    "or {C:attention}Eternal{} {C:dark_edition}Foil{} Obelisk.",
                     "Ignores slot limits.",
                     "Lose half your {C:money}dollars{}."
                 }
@@ -1517,7 +1643,7 @@ return {
                 name="Transcendence",
                 text={
                     "Apply {C:attention}Negative{} and {C:attention}Immortal{} to",
-                    "the selected {C:blue}playing card{}",
+                    "up to {C:attention}#1#{} selected {C:blue}playing cards{}",
                 },
             },
         },
@@ -1537,6 +1663,28 @@ return {
                 text = {
                     "Convert up to {C:attention}#1#{}",
                     "cards to {C:red}Resistant{}",
+                }
+            },
+            c_baliatro_ace_of_cups = {
+                name = "Ace of Cups",
+                text = {
+                    "Remove {C:attention}Enhancement{}, {C:attention}Seal{}, and",
+                    "{C:dark_edition}Edition{} from up to {C:attention}#1#{} card(s).",
+                    "It gains {C:chips}+#2#{} Chips and {C:mult}+#3#{} Mult",
+                    "for each of these removed. If",
+                    "it was already {C:attention}Plain{}, destroy",
+                    "it instead."
+                }
+            },
+            c_baliatro_king_of_swords = {
+                name = "King of Swords",
+                text = {
+                    "Add a random {C:attention}Enhancement{},",
+                    "{C:attention}Seal{} and {C:dark_edition}Edition{} to up to",
+                    "{C:attention}#1#{} card. Replaces existing",
+                    "effects. Cards that gain",
+                    "a hand size {C:dark_edition}Edition{} also",
+                    "gain {C:attention}Immortal{}."
                 }
             },
             c_fool={
@@ -1647,6 +1795,7 @@ return {
             k_baliatro_postcard="Postcard",
             k_baliatro_unknown="Unknown",
             k_baliatro_inflation_ex = "Inflation!",
+            k_baliatro_en_passant_ex = "En Passant!",
             k_postcard="Postcard",
             b_baliatro_postcard_cards="Postcards",
             b_postcard_cards="Postcards",

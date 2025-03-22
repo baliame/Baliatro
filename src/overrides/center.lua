@@ -212,7 +212,8 @@ SMODS.Joker:take_ownership('j_dna', {
         if context.first_hand_drawn and not context.blueprint then
             local eval = function() return G.GAME.current_round.hands_played == 0 end
             juice_card_until(card, eval, true)
-        elseif context.before and context.cardarea == G.jokers and not context.individual and G.GAME.current_round.hands_played == 0 and #context.full_hand == 1 and not BALIATRO.is_immortal(context.full_hand[1]) then
+        elseif context.before and context.cardarea == G.jokers and not context.individual and G.GAME.current_round.hands_played == 0 and #context.full_hand == 1 then
+            if BALIATRO.is_immortal(context.full_hand[1]) then return nil, true end
             G.playing_card = (G.playing_card and G.playing_card + 1) or 1
             local _card = copy_card(context.full_hand[1], nil, nil, G.playing_card)
             _card:add_to_deck()
@@ -352,7 +353,7 @@ SMODS.Joker:take_ownership("j_invisible", {
         return {vars = {card.ability.extra, card.ability.invis_rounds}}
     end,
     calculate = function(self, card, context)
-        if context.selling_self and (self.ability.invis_rounds >= self.ability.extra) and not context.blueprint then
+        if context.selling_self and (card.ability.invis_rounds >= card.ability.extra) and not context.blueprint then
             local eval = function(_c) return (_c.ability.loyalty_remaining == 0) and not G.RESET_JIGGLES end
                 juice_card_until(card, eval, true)
             local jokers = {}
@@ -372,15 +373,17 @@ SMODS.Joker:take_ownership("j_invisible", {
                     return nil, true
                 else
                     card_eval_status_text(context.blueprint_card or card, 'extra', nil, nil, nil, {message = localize('k_no_room_ex')})
+                    return nil, true
                 end
             else
                 card_eval_status_text(context.blueprint_card or card, 'extra', nil, nil, nil, {message = localize('k_no_other_jokers')})
+                return nil, true
             end
-        elseif context.end_of_round and not context.blueprint then
-            card.ability.invis_rounds = self.ability.invis_rounds + 1
+        elseif context.end_of_round and not context.blueprint and not context.individual and context.cardarea == G.jokers then
+            card.ability.invis_rounds = card.ability.invis_rounds + 1
             if card.ability.invis_rounds == card.ability.extra then
                 local eval = function(_c) return not _c.REMOVED end
-                juice_card_until(self, eval, true)
+                juice_card_until(card, eval, true)
             end
             return {
                 message = (card.ability.invis_rounds < card.ability.extra) and (card.ability.invis_rounds..'/'..card.ability.extra) or localize('k_active_ex'),

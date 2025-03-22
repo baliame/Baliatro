@@ -24,11 +24,13 @@ G.init_game_object = function(self)
     ret.current_round.booster_rerolls = 0
     ret.current_round.effigy_card = {rank = 'Ace', id = 14}
     ret.mortgage_rate = 15
-    ret.edition_rate = 1.6
+    ret.edition_rate = ret.edition_rate * 1.6
+    ret.booster_cost_multiplier = 1
     ret.ranks_scored = {}
     ret.real_estate = 1.5
     ret.pack_upgrade_chance = 0
     ret.baliatro_pacts = {}
+    ret.ante_goals = {}
     ret.pacts_cannot_appear = 0
     ret.audience_progress = 0
     ret.audience_progress_per_round = 9
@@ -45,6 +47,9 @@ local gsr = G.start_run
 G.start_run = function(self, args)
     local ret = gsr(self, args)
     G.jokers.config.highlighted_limit = 5
+    if BALIATRO.feature_flags.loot then
+        ret.loot = CardArea(0, 0, G.CARD_W, G.CARD_H, {card_limit = 500, type = 'loot'})
+    end
     return ret
 end
 
@@ -354,46 +359,65 @@ BALIATRO.tab_moons = function(simple)
     return ret
 end
 
-BALIATRO.ui = {
-    run_info = BALIATRO.tabgroup{
-        {
-            label = 'b_poker_hands',
-            chosen = true,
-            tab_definition_function = create_UIBox_current_hands,
-        },
-        {
-            label = 'b_blinds',
-            tab_definition_function = G.UIDEF.current_blinds,
-        },
-        {
-            label = 'b_vouchers',
-            tab_definition_function = G.UIDEF.used_vouchers,
-        },
-        {
-            label = 'b_baliatro_moons',
-            tab_definition_function = BALIATRO.tab_moons,
-        },
-        {
-            label = 'b_baliatro_ranks',
-            tab_definition_function = BALIATRO.tab_ranks,
-        },
-        {
-            condition = {type = "gamevar", variable = "stake", operator = "gt", value = 1},
-            label = 'b_stake',
-            tab_definition_function = G.UIDEF.current_stake,
-        },
-    }
+SMODS.Tab{
+    key = 'moons',
+    tab_dialog = 'run_info',
+    order = 23,
+    func = function(self)
+        return BALIATRO.tab_moons(false)
+    end
 }
 
-local guri = G.UIDEF.run_info
-function G.UIDEF.run_info()
-    return create_UIBox_generic_options({contents ={create_tabs(
-      {
-        tabs = BALIATRO.ui.run_info:render(),
-        tab_h = 8,
-        snap_to_nav = true
-    })}})
-  end
+SMODS.Tab{
+    key = 'ranks',
+    tab_dialog = 'run_info',
+    order = 27,
+    func = function(self)
+        return BALIATRO.tab_ranks(false)
+    end
+}
+
+--
+--BALIATRO.ui = {
+--    run_info = BALIATRO.tabgroup{
+--        {
+--            label = 'b_poker_hands',
+--            chosen = true,
+--            tab_definition_function = create_UIBox_current_hands,
+--        },
+--        {
+--            label = 'b_blinds',
+--            tab_definition_function = G.UIDEF.current_blinds,
+--        },
+--        {
+--            label = 'b_vouchers',
+--            tab_definition_function = G.UIDEF.used_vouchers,
+--        },
+--        {
+--            label = 'b_baliatro_moons',
+--            tab_definition_function = BALIATRO.tab_moons,
+--        },
+--        {
+--            label = 'b_baliatro_ranks',
+--            tab_definition_function = BALIATRO.tab_ranks,
+--        },
+--        {
+--            condition = {type = "gamevar", variable = "stake", operator = "gt", value = 1},
+--            label = 'b_stake',
+--            tab_definition_function = G.UIDEF.current_stake,
+--        },
+--    }
+--}
+--
+--local guri = G.UIDEF.run_info
+--function G.UIDEF.run_info()
+--    return create_UIBox_generic_options({contents ={create_tabs(
+--      {
+--        tabs = BALIATRO.ui.run_info:render(),
+--        tab_h = 8,
+--        snap_to_nav = true
+--    })}})
+--  end
 
 
 G.FUNCS.draw_from_play_to_discard = function(e)
@@ -434,6 +458,33 @@ G.FUNCS.can_discard = function(e)
         e.config.colour = G.C.RED
         e.config.button = 'discard_cards_from_highlighted'
     end
+end
+
+local cc = copy_card
+
+-- Safeguard against copying immortal cards via other mods.
+function copy_card(other, new_card, card_scale, playing_card, strip_edition)
+    local copy = cc(other, new_card, card_scale, playing_card, strip_edition)
+
+    if BALIATRO.is_immortal(other) then
+        if other.ability.set == 'Joker' then
+            copy:set_perishable(true)
+            copy.ability.perish_tally = 1
+            copy:set_edition(nil, true, true)
+        elseif other.ability.set == 'Default' or other.ability.set == 'Enhanced' then
+            copy:set_edition(G.P_CENTERS['e_baliatro_ethereal'], true, true)
+            if other.seal then
+                copy:set_seal(nil)
+            end
+            if other.ability.set == 'Enhanced' then
+                copy:set_ability(G.P_CENTERS.c_base)
+            end
+        elseif other.ability.consumeable then
+            copy:set_edition(G.P_CENTERS['e_baliatro_ephemeral'], true, true)
+        end
+    end
+
+    return copy
 end
 
 return {

@@ -1,3 +1,5 @@
+SMODS.Atlas({key="BaliatroPacts", path="BaliatroPacts.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"})
+
 SMODS.Rarity {
     key = "pact",
     badge_colour = HEX('993A03')
@@ -18,7 +20,32 @@ SMODS.Sound {
     path = 'hellfire.ogg'
 }
 
-BALIATRO.pact_excluded_blinds = {'bl_serpent', 'bl_wall', 'bl_final_vessel'}
+BALIATRO.pact_excluded_blinds = {'bl_serpent', 'bl_baliatro_rail', 'bl_baliatro_scorn'}
+
+-- Blind: The Scorn
+-- When Blind is defeated, destroy all consumables.
+SMODS.Blind {
+    key = 'scorn',
+    atlas = 'BaliatroBlinds',
+    pos = {x = 0, y = 13},
+    boss_colour = HEX('997D01'),
+    mult = 2,
+    dollars = 5,
+
+    in_pool = function(self)
+        return false
+    end,
+
+
+    defeat = function(self)
+        for k, card in ipairs(G.consumeables.cards) do
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.15, func = function()
+                card:start_dissolve(nil, nil)
+                return true
+            end}))
+        end
+    end,
+}
 
 function BALIATRO.pick_pact_blind(showdown, can_repeat)
     if not G.GAME or not G.GAME.baliatro_pacts then return nil end
@@ -165,11 +192,15 @@ SMODS.Edition {
 
     on_apply = function(card)
         local pact = card.config.center.pact or {}
-        if pact.unseen then card.edition.unseen = true end
-        if pact.showdown then card.edition.showdown = true end
-        if G.STAGE ~= G.STAGES.RUN then card.edition.collection = true end -- it's good enough to avoid a crash ig
-        if G.STAGE ~= G.STAGES.RUN or not G.GAME.baliatro_pacts then return end
-        card.edition.pact = BALIATRO.pick_pact_blind(pact.showdown, pact.can_repeat)
+        if not pact.fixed then
+            if pact.unseen then card.edition.unseen = true end
+            if pact.showdown then card.edition.showdown = true end
+            if G.STAGE ~= G.STAGES.RUN then card.edition.collection = true end -- it's good enough to avoid a crash ig
+            if G.STAGE ~= G.STAGES.RUN or not G.GAME.baliatro_pacts then return end
+            card.edition.pact = BALIATRO.pick_pact_blind(pact.showdown, pact.can_repeat)
+        else
+            card.edition.pact = pact.fixed
+        end
         card:set_eternal(true)
         if card.added_to_deck then BALIATRO.apply_pact(card.edition.pact) end
     end
@@ -198,6 +229,7 @@ BALIATRO.pact_defs = {
                 card_limit = 1,
             }
         },
+        pos = {x = 4, y = 0},
 
         treacherous = {
             calculate = function(self, card, context)
@@ -256,6 +288,7 @@ BALIATRO.pact_defs = {
                 card_limit = 8,
             }
         },
+        pos = {x = 7, y = 0},
 
         treacherous = {
             config = {
@@ -307,9 +340,10 @@ BALIATRO.pact_defs = {
         name = "Fingers",
         config = {
             extra = {
-                hand_size = 3,
+                hand_size = 2,
             }
         },
+        pos = {x = 1, y = 1},
 
         treacherous = {
             add_to_deck = function(self, card, from_debuff)
@@ -345,6 +379,7 @@ BALIATRO.pact_defs = {
                 income = 20,
             }
         },
+        pos = {x = 4, y = 1},
 
         treacherous = {
             config = {
@@ -385,6 +420,7 @@ BALIATRO.pact_defs = {
                 pool_remove = 5,
             }
         },
+        pos = {x = 7, y = 1},
 
         treacherous = {
             loc_vars = function(self, info_queue, card)
@@ -430,6 +466,7 @@ BALIATRO.pact_defs = {
                 normal = 3,
             }
         },
+        pos = {x = 1, y = 2},
         treacherous = {
             config = {
                 extra = {
@@ -470,6 +507,121 @@ BALIATRO.pact_defs = {
         loc_vars = function(self, info_queue, card)
             return { vars = { card.ability.extra.normal }}
         end,
+    },
+    -- Plenty
+    -- Create a copy of any non-legendary Tarot, Planet or Spectral card used in a Booster Pack. (must have room)
+    -- Treachery: Double the base cost of all Booster Packs
+    plenty = {
+        name = "Plenty",
+        config = {
+        },
+        pos = {x = 4, y = 2},
+        treacherous = {
+            config = {
+                extra = {
+                    booster_cost_multiplier = 2,
+                },
+            },
+
+            add_to_deck = function(self, card, from_debuff)
+                G.GAME.booster_cost_multiplier = G.GAME.booster_cost_multiplier * card.ability.extra.booster_cost_multiplier
+                if G.shop_booster and G.shop_booster.cards then
+                    for _, booster in ipairs(G.shop_booster.cards) do
+                        if booster and booster.ability.set == 'Booster' then
+                            booster.base_cost = booster.base_cost * card.ability.extra.booster_cost_multiplier
+                            booster:set_cost()
+                        end
+                    end
+                end
+            end,
+
+            remove_from_deck = function(self, card, from_debuff)
+                G.GAME.booster_cost_multiplier = G.GAME.booster_cost_multiplier * card.ability.extra.booster_cost_multiplier
+                if G.shop_booster and G.shop_booster.cards then
+                    for _, booster in ipairs(G.shop_booster.cards) do
+                        if booster and booster.ability.set == 'Booster' then
+                            booster.base_cost = booster.base_cost / card.ability.extra.booster_cost_multiplier
+                            booster:set_cost()
+                        end
+                    end
+                end
+            end,
+
+            loc_vars = function(self, info_queue, card)
+                return { vars = { card.ability.extra.booster_cost_multiplier }}
+            end,
+        },
+
+        calculate = function(self, card, context)
+            if context.blueprint then return end
+            if context.using_consumeable and context.area == G.pack_cards then
+                if #G.consumeables.cards + G.GAME.consumeable_buffer >= G.consumeables.config.card_limit then return end
+                local other = context.consumeable
+                if other.ability.set == 'Tarot' or other.ability.set == 'Planet' or other.ability.set == 'Spectral' then
+                    local o_center = other.config.center
+                    if (o_center.soul_rate and o_center.soul_rate > 0) or o_center.rarity == 4 then
+                        return
+                    end
+                    G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + 1
+                    G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2, func = function()
+                        G.GAME.consumeable_buffer = 0
+                        if #G.consumeables.cards >= G.consumeables.config.card_limit then return true end
+                        local copy = copy_card(other)
+                        copy:add_to_deck()
+                        G.consumeables:emplace(copy)
+                        return true
+                    end}))
+                    return {
+                        message = localize('k_duplicated_ex')
+                    }
+                end
+            end
+        end,
+    },
+
+    -- Craftmanship
+    -- 1 in 15 chance for upgradable Jokers in the shop to be sold upgraded.
+    -- Treachery: 1 in 5 chance to replace any card appearing in the shop with Wheel of Fortune.
+    craftmanship = {
+        name = "Craftmanship",
+        config = {
+            extra = {
+                odds = 15,
+            }
+        },
+        pos = {x = 7, y = 2},
+        treacherous = {
+            config = {
+                extra = {
+                    bad_odds = 5,
+                }
+            },
+
+            calculate = function(self, card, context)
+                if context.blueprint then return end
+                if context.card_created_in_shop then
+                    local roll1 = pseudorandom('craftmanship') < G.GAME.probabilities.normal / card.ability.extra.odds
+                    local roll2 = pseudorandom('craftmanship') < G.GAME.probabilities.normal / card.ability.extra.bad_odds
+                    return {upgrade = roll1, make_bad = roll2}
+                end
+            end,
+
+            loc_vars = function(self, info_queue, card)
+                return { vars = { (G.GAME and G.GAME.probabilities.normal) or 1, card.ability.extra.odds, card.ability.extra.bad_odds }}
+            end,
+        },
+
+        loc_vars = function(self, info_queue, card)
+            return { vars = { (G.GAME and G.GAME.probabilities.normal) or 1, card.ability.extra.odds }}
+        end,
+
+        calculate = function(self, card, context)
+            if context.blueprint then return end
+            if context.card_created_in_shop then
+                local roll1 = pseudorandom('craftmanship') < G.GAME.probabilities.normal / card.ability.extra.odds
+                return {upgrade = roll1}
+            end
+        end,
     }
 }
 
@@ -489,7 +641,7 @@ SMODS.Joker {
     cost = 1,
     rarity = "baliatro_punishment",
     pact = {
-        showdown = true,
+        fixed = 'bl_baliatro_scorn'
     },
     atlas = "BaliatroUp",
 
@@ -533,7 +685,7 @@ function BALIATRO.pact_joker(def)
         name = "Unseen " .. def.name,
         key = "pact_unseen_" .. def.base,
         config = def.config,
-        atlas = (def.unseen and def.unseen.atlas) or def.atlas or 'BaliatroUp',
+        atlas = (def.unseen and def.unseen.atlas) or def.atlas or 'BaliatroPacts',
         pos = (def.unseen and def.unseen.pos) or def.pos or {x = 0, y = 0},
         unlocked = true,
         blueprint_compat = false,
@@ -563,8 +715,8 @@ function BALIATRO.pact_joker(def)
         name = "Dangerous " .. def.name,
         key = "pact_dangerous_" .. def.base,
         config = dangerous_config,
-        atlas = (def.dangerous and def.dangerous.atlas) or def.atlas or 'BaliatroUp',
-        pos = (def.dangerous and def.dangerous.pos) or def.pos or {x = 0, y = 0},
+        atlas = (def.dangerous and def.dangerous.atlas) or def.atlas or 'BaliatroPacts',
+        pos = (def.dangerous and def.dangerous.pos) or (def.pos and {x = def.pos.x + 1, y = def.pos.y}) or {x = 0, y = 0},
         unlocked = true,
         blueprint_compat = false,
         eternal_compat = false,
@@ -593,8 +745,8 @@ function BALIATRO.pact_joker(def)
         name = "Treacherous " .. def.name,
         key = "pact_treacherous_" .. def.base,
         config = treacherous_config,
-        atlas = (def.treacherous and def.treacherous.atlas) or def.atlas or 'BaliatroUp',
-        pos = (def.treacherous and def.treacherous.pos) or def.pos or {x = 0, y = 0},
+        atlas = (def.treacherous and def.treacherous.atlas) or def.atlas or 'BaliatroPacts',
+        pos = (def.treacherous and def.treacherous.pos) or (def.pos and {x = def.pos.x + 2, y = def.pos.y}) or {x = 0, y = 0},
         unlocked = true,
         blueprint_compat = false,
         eternal_compat = false,

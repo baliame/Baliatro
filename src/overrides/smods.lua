@@ -1,4 +1,5 @@
-table.insert(SMODS.calculation_keys, "transfer")
+table.insert(SMODS.calculation_keys, "baliatro_transfer")
+table.insert(SMODS.calculation_keys, "baliatro_chips_as_mult")
 
 local scie = SMODS.calculate_individual_effect
 SMODS.calculate_individual_effect = function(effect, scored_card, key, amount, from_edition)
@@ -6,7 +7,7 @@ SMODS.calculate_individual_effect = function(effect, scored_card, key, amount, f
 
     if ret then return ret end
 
-    if key == 'transfer' then
+    if key == 'baliatro_transfer' then
         if mult > 1 then
             local t = math.min(amount, mult - 1)
             hand_chips = mod_chips(hand_chips + t)
@@ -21,6 +22,15 @@ SMODS.calculate_individual_effect = function(effect, scored_card, key, amount, f
                 message = localize('baliatro_cannot_transfer'),
                 colour = G.C.CHIPS,
             })
+        end
+        return true
+    elseif key == 'baliatro_chips_as_mult' then
+        local t = math.floor(hand_chips * amount)
+        print('chips: ', hand_chips, 't: ', t)
+        if t > 0 then
+            mult = mod_mult(mult + t)
+            update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+            card_eval_status_text(scored_card, 'mult', t, percent)
         end
         return true
     end
@@ -133,7 +143,7 @@ SMODS.Rarity:take_ownership('Legendary', {
 
 local scc = SMODS.calculate_context
 SMODS.calculate_context = function(context, return_table)
-    scc(context, return_table)
+    local ret = scc(context, return_table)
     if context.setting_blind then
         BALIATRO.setting_blind()
     end
@@ -159,6 +169,12 @@ SMODS.calculate_context = function(context, return_table)
             b:after_play(context)
         end
     end
+
+    if BALIATRO.feature_flags.loot then
+        BALIATRO.calculate_goal_context(context)
+    end
+
+    return ret
 end
 
 local scms = SMODS.calculate_main_scoring

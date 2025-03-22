@@ -1,3 +1,96 @@
+# v0.2.0~pre10
+
+## Compatibility
+
+- Update compatibility to Steamodded **BETA 0321e**.
+  - Fix crash on starting a new run
+- Baliatro now wraps copy_card() to make replication of Immortal cards through other mods unpleasant.
+
+## 🚀 New additions
+
+### Jokers
+
+- Added "art" to **1. e4**, **1. ...e5**, **En Passant**, **Monolith**, **The Favourite**, **Sevenfold Avenger**, **Whale Joker**, **Tug of War**, **Romeo** and **Katamari Joker**.
+- Added new common Joker **All In**
+- Added new upgraded Joker **Il Vaticano**, as the upgraded variant of **En Passant**.
+- Added new uncommon Joker **The Elephant**.
+  - The Elephant is a historic chess piece, which adds an effect to _The Devil_, similarly to the other chess piece jokers.
+  - Unlike the other chess piece Jokers, The Elephant does not generate The Devil. This is intentional, as the effect has a potential to be stronger than The Rook while not similarly locking the player into a build.
+- Added new uncommon Joker **Vanilla Beans** and new rare Joker **Blank Card**.
+  - These are intended to support and later provide a transition for builds starting with Plain mechanic jokers. Comes with art!
+- Added new uncommon Joker **Frequent Flyer Card**.
+  - This is intended to support Chips-stacking strategies with a very strong source of Mult that is somewhat weak in the early game. Comes with art!
+
+### Consumables
+
+- Added Tarot card **Ace of Cups**.
+  - This can be used to cleanse a card, making it plain. Primary intention is to allow a late game pathway to creating plain cards for a pivot to **Blank Card**.
+  - Has weaker alternative uses to make it not a completely dead draw from packs.
+- Added legendary Tarot card **King of Swords**.
+  - This applies a random non-faded edition, seal and enhancement to a single card.
+  - The frequency is currently relatively high, and may be lowered in the future.
+  - In addition to providing an additional red seal source, this is also intended to somewhat aid a transition from Plain cards into **Blank Card**.
+
+### Pacts
+
+- Added "art" to all pacts.
+- Added the **Plenty** and **Craftmanship** pact family.
+
+## ⚖️ Balance
+
+### Enhancement
+
+- **Resistant** cards no longer innately have -2 Mult. Instead, the card permanently gains -0.5 Mult when scored.
+  - The penalty for Resistant cards early was brutal, but came at very little cost for established decks in later antes. This way, an Ace of Pentacles can be used in a pinch for play scoring strategies at the cost of weakening the card.
+
+### Jokers
+
+- **Scales** now loses X0.1 Mult when an unchosen hand is played (from X0.2 Mult) and can no longer select the same hand twice in a row.
+  - This should somewhat.. balance the scales on its sometimes awful tendency to get stuck on Straight Flush. Still no guarantees, though!
+- **Lesser Demon** now also causes held Gold cards to grant +8 Mult.
+  - This card is extremely particular in exchange for a somewhat weak effect. This should effectively make it stronger than a Midas Mask as long as you can draw your sixes.
+- **Effigy** now grants 6 retriggers in total, but only up to 3 per card.
+  - This effectively grants 3 retriggers per card for Pairs, 2 retriggers per card for Three of a Kind, while keeping it only marginally better than _Sock and Buskin_ and _Hack_ for Flush Fives, and equivalent to _Hanginger Chad_ for High Cards.
+
+### Planets
+
+- **Phobos** once again grants +5 Mult per use.
+
+### Pacts
+
+- **The Devil's Scorn** no longer comes with a Showdown pact, instead, it always comes with **The Scorn**, which is a 2X Blind that destroys all consumables when defeated.
+  - This should severely reduce the extreme case downsides of interacting with the mechanic.
+- The **Fingers** contract now grants +2 Hand Size (from +3).
+  - +3 Hand Size gave a one-card solution to applying Tug of War to the play area on a 5-card played hand. This way, at least one hand size has to be acquired from another source.
+- Blinds applied by pacts now also apply their score multiplier.
+  - Taking Pacts should always weigh potential gain against potential downsides. This should make it more of a hail mary play to take a pact on ante 4 on a run that is somewhat struggling.
+- **The Wall** and **Violet Vessel** can now appear as pact blinds.
+- **The Rail** can no longer appear as a pact blind.
+  - Debuffed cards do not count as played for The Rail, so effectively, it was stuck debuffing every playing card.
+  - Besides, Rail as a pact blind is cruel and unusual punishment due to the unconditional volume of playing cards debuffed.
+
+## 🛠️ Bug Fixes
+
+### Blinds
+
+- Fix **Turquoise Ladder** just straight up not working.
+
+### Editions
+
+- **Photographic** playing cards, should you happen to acquire one, will now correctly score XChips on held in hand and joker-induced effects.
+- **Scenic** cards now correctly count XChips gain as triggering.
+
+### Jokers
+
+- Fix end of round crash with **Invisible Joker**.
+- Fix **The Knight** setting the incorrect field on cards, thus not granting permanent dollar bonuses.
+- Fix **The Pawn**, **The Rook**, **The Knight**, **The Bishop** and **The Queen** retriggering enhanced held in hand cards.
+- Added some missing informational boxes.
+
+### Pacts
+
+- Fix in-shop crash with Verdant Leaf.
+
 # v0.2.0~pre9
 
 ## ⚖️ Balance

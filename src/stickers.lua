@@ -1,4 +1,4 @@
-SMODS.Atlas({key="BaliatroStickers", path="BaliatroStickers.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"}):register()
+SMODS.Atlas({key="BaliatroStickers", path="BaliatroStickers.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"})
 
 SMODS.Sticker {
     key = "mortgage",

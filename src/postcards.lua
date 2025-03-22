@@ -1,5 +1,5 @@
-SMODS.Atlas({key="BaliatroPostcard", path="BaliatroPostcards.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"}):register()
-SMODS.Atlas({key="BaliatroPacks", path="BaliatroPacks.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"}):register()
+SMODS.Atlas({key="BaliatroPostcard", path="BaliatroPostcards.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"})
+SMODS.Atlas({key="BaliatroPacks", path="BaliatroPacks.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"})
 
 SMODS.ConsumableType {
 	object_type = "ConsumableType",

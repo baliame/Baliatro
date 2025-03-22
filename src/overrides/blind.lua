@@ -299,7 +299,7 @@ SMODS.Blind:take_ownership('bl_final_leaf', {
     end,
 
     recalc_debuff = function(self, card, from_blind)
-        return card.area ~= G.jokers and G.GAME.blind.bl_final_leaf.debuffing
+        return card.area ~= G.jokers and G.GAME.blind.bl_final_leaf and G.GAME.blind.bl_final_leaf.debuffing
     end
 })
 
@@ -396,6 +396,19 @@ SMODS.Blind:take_ownership('bl_final_bell', {
 }, true)
 
 
+function BALIATRO.get_blind_pacts_multiplier()
+    local ret = 1
+    for _, pact in ipairs(G.GAME.baliatro_pacts or {}) do
+        if not pact.disabled then
+            local c_blind = pact.blind
+            local p_blind = G.P_BLINDS[c_blind]
+            ret = ret * p_blind.mult
+        end
+    end
+    return ret
+end
+
+
 local bsb = Blind.set_blind
 
 Blind.set_blind = function(self, blind, reset, silent)
@@ -407,7 +420,9 @@ Blind.set_blind = function(self, blind, reset, silent)
             local p_blind = G.P_BLINDS[c_blind]
             if p_blind then
                 if not reset then
-                    G.GAME.blind.mult = G.GAME.blind.mult * p_blind.mult
+                    --G.GAME.blind.mult = G.GAME.blind.mult * p_blind.mult
+                    G.GAME.blind.chips = G.GAME.blind.chips * p_blind.mult
+                    G.GAME.blind.chip_text = number_format(G.GAME.blind.chips)
                     if p_blind.set_blind and type(p_blind.set_blind) == 'function' then
                         p_blind:set_blind()
                     end
