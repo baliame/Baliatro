@@ -493,6 +493,7 @@ function BALIATRO.end_of_round()
 end
 
 function BALIATRO.calculate_goal_context(context)
+    if not G.GAME.goal_trackers then return end
     for goal_key, goal_data in pairs(G.GAME.goal_trackers) do
         if not goal_data.config.is_completed and not goal_data.config.is_failed then
             local goal = BALIATRO.Goals[goal_key]
@@ -529,6 +530,7 @@ function BALIATRO.setting_blind()
             local goal = BALIATRO.Goals[goal_key]
             G.GAME.goal_trackers[goal_key] = goal_data
         end
+        G.GAME.blind_goals_dirty = true
     end
 end
 

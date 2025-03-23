@@ -17,7 +17,7 @@ SMODS.Enhancement {
     pos = { x = 0, y = 0 },
     config = {
         cannot_be_debuffed = true,
-        mult_gain = -0.25,
+        mult_gain = -0.5,
     },
     weight = 2,
 

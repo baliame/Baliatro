@@ -23,6 +23,7 @@ G.init_game_object = function(self)
     ret.interest_basis_modifier = 0
     ret.current_round.booster_rerolls = 0
     ret.current_round.effigy_card = {rank = 'Ace', id = 14}
+    ret.current_round.goal_evals = {}
     ret.mortgage_rate = 15
     ret.edition_rate = ret.edition_rate * 1.6
     ret.booster_cost_multiplier = 1
@@ -46,9 +47,15 @@ end
 local gsr = G.start_run
 G.start_run = function(self, args)
     local ret = gsr(self, args)
+    local saveTable = args.savetext or nil
     G.jokers.config.highlighted_limit = 5
     if BALIATRO.feature_flags.loot then
-        ret.loot = CardArea(0, 0, G.CARD_W, G.CARD_H, {card_limit = 500, type = 'loot'})
+        self.loot = CardArea(self.jokers.T.x + self.jokers.T.w/2 + 0.3 + 15, 1.2, G.CARD_W, G.CARD_H, {card_limit = 500, type = 'loot'})
+        if not saveTable then
+            BALIATRO.generate_ante_goals()
+        else
+            G.GAME.blind_goals_dirty = true
+        end
     end
     return ret
 end
@@ -58,7 +65,9 @@ G.FUNCS.evaluate_round = function()
     local int = G.GAME.spec_planets['baliatro_interest']
     G.GAME.interest_amount = int.c_v1
     G.GAME.interest_cap = int.c_v2
-    return gfer()
+    local ret = gfer()
+
+    return ret
 end
 
 
@@ -72,92 +81,6 @@ G.FUNCS.skip_booster = function(e)
     end
     gfsb(e)
 end
-
-BALIATRO.cond = {
-    type = {
-        gamevar = function(var)
-            return G.GAME[var]
-        end
-    },
-    operator = {
-        gt = function(a, b)
-            return a > b
-        end,
-        ge = function(a, b)
-            return a >= b
-        end,
-        lt = function(a, b)
-            return a < b
-        end,
-        le = function(a, b)
-            return a <= b
-        end,
-        eq = function(a, b)
-            return a == b
-        end,
-        ne = function(a, b)
-            return a ~= b
-        end,
-    }
-}
-
-BALIATRO.meta = function(class)
-    local mt = {
-        __call = function(self, args)
-            local ret = {}
-            for k, v in pairs(class) do
-                ret[k] = v
-            end
-            ret:init(args)
-            return ret
-        end
-    }
-    setmetatable(class, mt)
-    return class
-end
-
-BALIATRO.tabgroup = BALIATRO.meta{
-    init = function(self, tabdefs)
-        self.tabdefs = {}
-        for _, tab in ipairs(tabdefs) do
-            self.tabdefs[#self.tabdefs+1] = BALIATRO.tabdef(tab)
-        end
-    end,
-
-    render = function(self)
-        local out = {}
-        for _, tabdef in ipairs(self.tabdefs) do
-            if tabdef:can_show() then
-                out[#out + 1] = tabdef:render()
-            end
-        end
-        return out
-    end,
-}
-
-BALIATRO.tabdef = BALIATRO.meta{
-    init = function(self, args)
-        self.label = args.label
-        self.chosen = args.chosen or false
-        self.tab_definition_function = args.tab_definition_function
-        self.condition = args.condition
-    end,
-
-    render = function(self)
-        return {
-            label = localize(self.label),
-            chosen = self.chosen,
-            tab_definition_function = self.tab_definition_function,
-        }
-    end,
-
-    can_show = function(self)
-        if not self.condition then return true end
-        local a = BALIATRO.cond.type[self.condition.type](self.condition.variable)
-        local b = self.condition.value
-        return BALIATRO.cond.operator[self.condition.operator](a, b)
-    end,
-}
 
 BALIATRO.ranks_sorted = {}
 
@@ -361,7 +284,7 @@ end
 
 SMODS.Tab{
     key = 'moons',
-    tab_dialog = 'run_info',
+    tab_dialog = 'baliatro_run_info',
     order = 23,
     func = function(self)
         return BALIATRO.tab_moons(false)
@@ -370,55 +293,12 @@ SMODS.Tab{
 
 SMODS.Tab{
     key = 'ranks',
-    tab_dialog = 'run_info',
+    tab_dialog = 'baliatro_run_info',
     order = 27,
     func = function(self)
         return BALIATRO.tab_ranks(false)
     end
 }
-
---
---BALIATRO.ui = {
---    run_info = BALIATRO.tabgroup{
---        {
---            label = 'b_poker_hands',
---            chosen = true,
---            tab_definition_function = create_UIBox_current_hands,
---        },
---        {
---            label = 'b_blinds',
---            tab_definition_function = G.UIDEF.current_blinds,
---        },
---        {
---            label = 'b_vouchers',
---            tab_definition_function = G.UIDEF.used_vouchers,
---        },
---        {
---            label = 'b_baliatro_moons',
---            tab_definition_function = BALIATRO.tab_moons,
---        },
---        {
---            label = 'b_baliatro_ranks',
---            tab_definition_function = BALIATRO.tab_ranks,
---        },
---        {
---            condition = {type = "gamevar", variable = "stake", operator = "gt", value = 1},
---            label = 'b_stake',
---            tab_definition_function = G.UIDEF.current_stake,
---        },
---    }
---}
---
---local guri = G.UIDEF.run_info
---function G.UIDEF.run_info()
---    return create_UIBox_generic_options({contents ={create_tabs(
---      {
---        tabs = BALIATRO.ui.run_info:render(),
---        tab_h = 8,
---        snap_to_nav = true
---    })}})
---  end
-
 
 G.FUNCS.draw_from_play_to_discard = function(e)
     local play_count = #G.play.cards

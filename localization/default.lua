@@ -1,6 +1,184 @@
 return {
     descriptions = {
         Back={},
+        Goal={
+            goal_baliatro_play_two_two_pair = {
+                name = 'Play 2 Two Pair',
+                text = {
+                    'Play a hand containing a',
+                    '{C:green}#2#{} {C:attention}#1#{} time(s)'
+                }
+            },
+            goal_baliatro_play_two_flush = {
+                name = 'Play 2 Flush',
+                text = {
+                    'Play a {C:green}#2#{} {C:attention}#1#{} time(s)'
+                }
+            },
+            goal_baliatro_play_one_straight_flush = {
+                name = 'Play 1 Straight Flush',
+                text = {
+                    'Play a {C:green}#2#{} {C:attention}#1#{} time(s)'
+                }
+            },
+
+            goal_baliatro_play_one_four_of_a_kind = {
+                name = 'Play 1 Four of a Kind',
+                text = {
+                    'Play a hand containing a',
+                    '{C:green}#2#{} {C:attention}#1#{} time(s)'
+                }
+            },
+            goal_baliatro_play_no_triplicates = {
+                name = 'Play no triplicates',
+                text = {
+                    'Play no hand containing',
+                    'any {C:green}#1#{}'
+                }
+            },
+
+            goal_baliatro_play_no_duplicates = {
+                name = 'Play no duplicates',
+                text = {
+                    'Play no hand containing',
+                    'any {C:green}#1#{}'
+                }
+            },
+
+            goal_baliatro_play_less_than_five = {
+                name = 'Play less than five cards',
+                text = {
+                    'Play no hand containing',
+                    'at least {C:attention}#1#{} cards'
+                }
+            },
+
+            goal_baliatro_score_ten_hearts = {
+                name = 'Score ten hearts',
+                text = {
+                    'Score {V:1}#2#{} suit cards',
+                    'at least {C:attention}#1#{} time(s)'
+                }
+            },
+
+            goal_baliatro_score_ten_diamonds = {
+                name = 'Score ten diamonds',
+                text = {
+                    'Score {V:1}#2#{} suit cards',
+                    'at least {C:attention}#1#{} time(s)'
+                }
+            },
+
+            goal_baliatro_score_ten_spades = {
+                name = 'Score ten spades',
+                text = {
+                    'Score {V:1}#2#{} suit cards',
+                    'at least {C:attention}#1#{} time(s)'
+                }
+            },
+
+            goal_baliatro_score_ten_clubs = {
+                name = 'Score ten clubs',
+                text = {
+                    'Score {V:1}#2#{} suit cards',
+                    'at least {C:attention}#1#{} time(s)'
+                }
+            },
+
+            goal_baliatro_score_two_suits_fourteen_total = {
+                name = 'Score two suits fourteen times',
+                text = {
+                    'Score {V:1}#2#{} or {V:2}#3#{} suit',
+                    'cards at least {C:attention}#1#{} time(s)'
+                }
+            },
+
+            goal_baliatro_score_three_ranks_five_total = {
+                name = 'Score three ranks five times',
+                text = {
+                    'Score {C:attention}#2#{}, {C:attention}#3#{} or {C:attention}#4#{} rank',
+                    'cards at least {C:attention}#1#{} time(s)'
+                }
+            },
+
+            goal_baliatro_play_none_of_three_ranks = {
+                name = 'Play none of three ranks',
+                text = {
+                    'Score no {C:attention}#1#{}, {C:attention}#2#{} or {C:attention}#3#{}',
+                    'rank cards this round'
+                }
+            },
+
+            goal_baliatro_play_none_of_suit = {
+                name = 'Play none of suit',
+                text = {
+                    'Score no {V:1}#1#{}',
+                    'suit cards this round'
+                }
+            },
+
+            goal_baliatro_play_none_of_two_suits = {
+                name = 'Play none of two suits',
+                text = {
+                    'Score no {V:1}#1#{} or {V:2}#2#{}',
+                    'suit cards this round'
+                }
+            },
+
+            goal_baliatro_win_in_one_hand = {
+                name = 'Win in one hand',
+                text = {
+                    'Play at most {C:attention}#1#{} hand',
+                }
+            },
+
+            goal_baliatro_play_three_hands = {
+                name = 'Play three hands',
+                text = {
+                    'Play at least {C:attention}#1#{} hands',
+                }
+            },
+
+            goal_baliatro_play_two_different_hands = {
+                name = 'Play two different hands',
+                text = {
+                    'Play at least {C:attention}#1#{}',
+                    'different hand(s)',
+                }
+            },
+
+            goal_baliatro_play_one_hand_type = {
+                name = 'Play one hand type',
+                text = {
+                    'Play no more than {C:attention}#1#{}',
+                    'different hand(s)',
+                }
+            },
+
+            goal_baliatro_score_at_least_three_quarters = {
+                name = 'Score at least 75% in one hand',
+                text = {
+                    'Play a hand scoring at least',
+                    '{C:attention}#1#%{} of Blind requirement',
+                }
+            },
+
+            goal_baliatro_overscore_double = {
+                name = 'Score at least 200% in one hand',
+                text = {
+                    'Play a hand scoring at least',
+                    '{C:attention}#1#%{} of Blind requirement',
+                }
+            },
+
+            goal_baliatro_overscore_ten_times = {
+                name = 'Score at least 1000% in one hand',
+                text = {
+                    'Play a hand scoring at least',
+                    '{C:attention}#1#%{} of Blind requirement',
+                }
+            },
+        },
         Blind={
             bl_baliatro_wizard = {
                 name = 'The Wizard',
@@ -1833,6 +2011,13 @@ return {
             k_baliatro_random_unseen_blind = "<random blind hidden before selection>",
             k_baliatro_random_showdown_blind = "<random showdown blind>",
             k_baliatro_random_blind = "<random non-showdown blind>",
+            k_baliatro_saturated = 'Saturated',
+            k_baliatro_non_plain = 'Non-Plain',
+            k_baliatro_playing_card = 'Playing card',
+            k_baliatro_completed_ex = 'Completed!',
+            k_baliatro_failed_ex = 'Failed!',
+            k_baliatro_autocompletes_ex = 'Automatically completes',
+            k_baliatro_rewards_colon = 'Rewards:',
         },
         high_scores={},
         labels={
@@ -1889,6 +2074,7 @@ return {
             a_divide_by_ex = 'Divide by +#1#!',
             a_baliatro_afterimage_remembered = "Remembering a #1# of #2#",
             a_baliatro_x_base = '#1#X Base',
+            a_baliatro_progress_perc = 'Progress: #1#%',
         },
         v_text={},
     },

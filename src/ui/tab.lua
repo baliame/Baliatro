@@ -28,7 +28,8 @@ SMODS.Tab = SMODS.GameObject:extend {
 
 SMODS.Tab{
     key = 'remaining',
-    tab_dialog = 'deck_info',
+    loc_key = 'remaining',
+    tab_dialog = 'baliatro_deck_info',
     order = 0,
     chosen = true,
     func = function(self)
@@ -42,7 +43,8 @@ SMODS.Tab{
 
 SMODS.Tab{
     key = 'full_deck',
-    tab_dialog = 'deck_info',
+    loc_key = 'full_deck',
+    tab_dialog = 'baliatro_deck_info',
     order = 10,
     func = function(self)
         return G.UIDEF.view_deck()
@@ -51,7 +53,8 @@ SMODS.Tab{
 
 SMODS.Tab{
     key = 'poker_hands',
-    tab_dialog = 'run_info',
+    loc_key = 'poker_hands',
+    tab_dialog = 'baliatro_run_info',
     order = 0,
     chosen = true,
     func = function(self)
@@ -61,7 +64,8 @@ SMODS.Tab{
 
 SMODS.Tab{
     key = 'blinds',
-    tab_dialog = 'run_info',
+    loc_key = 'blinds',
+    tab_dialog = 'baliatro_run_info',
     order = 10,
     func = function(self)
         return G.UIDEF.current_blinds()
@@ -70,7 +74,8 @@ SMODS.Tab{
 
 SMODS.Tab{
     key = 'vouchers',
-    tab_dialog = 'run_info',
+    loc_key = 'vouchers',
+    tab_dialog = 'baliatro_run_info',
     order = 20,
     func = function(self)
         return G.UIDEF.used_vouchers()
@@ -79,7 +84,8 @@ SMODS.Tab{
 
 SMODS.Tab{
     key = 'stake',
-    tab_dialog = 'run_info',
+    loc_key = 'stake',
+    tab_dialog = 'baliatro_run_info',
     order = 30,
     func = function(self)
         return G.UIDEF.current_stake()

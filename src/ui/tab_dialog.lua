@@ -57,7 +57,7 @@ SMODS.TabDialog = SMODS.UIBox:extend {
                 local chosen = not chosen_seen and tab.chosen or nil
                 chosen_seen = chosen_seen or chosen
                 tabs[#tabs+1] = {
-                    label = localize('b_' .. tab.key),
+                    label = localize('b_' .. (tab.loc_key or tab.key)),
                     order = tab.order,
                     chosen = chosen,
                     tab_definition_function = function() return tab:func() end,
@@ -88,9 +88,9 @@ SMODS.TabDialog {
 }
 
 function G.UIDEF.deck_info(_show_remaining)
-    return SMODS.TabDialogs.deck_info:create_UIBox({show_remaining = _show_remaining})
+    return SMODS.TabDialogs.baliatro_deck_info:create_UIBox({show_remaining = _show_remaining})
 end
 
 function G.UIDEF.run_info()
-    return SMODS.TabDialogs.run_info:create_UIBox()
+    return SMODS.TabDialogs.baliatro_run_info:create_UIBox()
 end

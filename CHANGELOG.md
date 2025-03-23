@@ -1,3 +1,9 @@
+# v0.2.0~pre11
+
+## 🛠️ Bug Fixes
+
+- Fix crash when viewing Run Info or Deck Info.
+
 # v0.2.0~pre10
 
 ## Compatibility

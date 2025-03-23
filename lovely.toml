@@ -511,3 +511,58 @@ if BALIATRO.feature_flags.loot then
     BALIATRO.calculate_goal_context(context)
 end
 '''
+
+## Evaluate blind goal completion and award loot
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = 'G.STATE = G.STATES.ROUND_EVAL'
+position = 'after'
+match_indent = true
+payload = 'if BALIATRO.feature_flags.loot then BALIATRO.evaluate_round_goals() end'
+
+## Reset goals on end of ante
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = 'G.GAME.current_round.voucher = SMODS.get_next_vouchers()'
+position = 'after'
+match_indent = true
+payload = 'if BALIATRO.feature_flags.loot then BALIATRO.generate_ante_goals() end'
+
+
+## Reset Blind HUD on end of ante
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = 'G.GAME.blind.in_blind = false'
+position = 'after'
+match_indent = true
+payload = 'if BALIATRO.feature_flags.loot then G.GAME.blind_goals_dirty = true end'
+
+## Add goals on round eval
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = 'if total_cashout_rows > 7 then'
+position = 'before'
+match_indent = true
+payload = '''
+if BALIATRO.feature_flags.loot then
+    for goal, completed in pairs(G.GAME.current_round.goal_evals) do
+        BALIATRO.add_round_eval_goal(goal, completed, pitch)
+        pitch = pitch + 0.06
+    end
+end
+'''
+
+# [[patches]]
+# [patches.pattern]
+# target = "engine/ui.lua"
+# pattern = 'if self.config.colour[4] > 0.01 then'
+# position = 'before'
+# match_indent = true
+# payload = '''if not self.config.colour then
+#     print("i am about to crash")
+#     BALIATRO.tprint(self, 0, 2)
+# end'''
