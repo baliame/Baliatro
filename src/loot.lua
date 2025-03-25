@@ -2,6 +2,9 @@ if BALIATRO.feature_flags.loot then
 SMODS.Atlas({key="BaliatroObjectiveIcons", path="BaliatroObjectiveIcons.png", px = 32, py = 32, atlas_table="ASSET_ATLAS"})
 SMODS.Atlas({key="BaliatroLoot", path="BaliatroLoot.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"})
 
+SMODS.ObjectType {
+    key = 'Loot'
+}
 
 SMODS.Consumable {
     object_type = "Consumable",
@@ -12,13 +15,15 @@ SMODS.Consumable {
     atlas = "BaliatroLoot",
     no_take = true,
     no_collection = true,
-    hidden = true,
-    soul_rate = 0,
-    soul_set = "Loot",
     config = {
         dollars = 1,
     },
 
+    set_card_type_badge = function(self, card, badges)
+        badges[1] = create_badge(localize('k_baliatro_loot'), HEX('057074'), nil, 1.2)
+    end,
+
+    can_use = function(self, card) return true end,
     loc_vars = function(self, info_queue, card)
         return {vars={card.ability.consumeable.dollars}}
     end,
@@ -36,6 +41,7 @@ BALIATRO.LootPlaceholder = SMODS.Center:extend {
     pos = { x = 0, y = 0 },
     cost = 3,
     config = {},
+
     set = 'LootPlaceholder',
     atlas = 'baliatro_BaliatroLoot',
     class_prefix = 'lp',
@@ -53,8 +59,12 @@ BALIATRO.LootPlaceholder = SMODS.Center:extend {
 
     set_ability = function(self, card, initial, delay_sprites)
         if self.generates and self.generates.edition and G.P_CENTERS[self.generates.edition] and (not G.P_CENTERS[self.generates.edition].config or not G.P_CENTERS[self.generates.edition].config.card_limit) then
-            card:set_edition(self.generates.edition)
+            card:set_edition(self.generates.edition, true, true)
         end
+    end,
+
+    set_card_type_badge = function(self, card, badges)
+        badges[1] = create_badge(localize('k_baliatro_loot'), HEX('057074'), nil, 1.2)
     end,
 
     pre_inject_class = function(self)
@@ -93,14 +103,14 @@ BALIATRO.LootPlaceholder = SMODS.Center:extend {
                 description[#description+1] = localize('k_baliatro_saturated')
             end
             if self.generates.rarity then
-                local vanilla_rarities = {[1] = 'common', [2] = 'uncommon', [3] = 'rare', [4] = 'legendary'}
+                local vanilla_rarities = {Common = 'common', Uncommon = 'uncommon', Rare = 'rare', Legendary = 'legendary'}
                 description[#description+1] = vanilla_rarities[self.generates.rarity] and localize('k_'..vanilla_rarities[self.generates.rarity]) or localize('k_'..self.generates.rarity)
             end
             if self.generates.edition then
                 description[#description+1] = localize{type='name_text', set='Edition', key=self.generates.edition}
             end
 
-            description[#description+1] = localize(self.generates.set == 'Default' and 'k_baliatro_playing_card' or 'k_' .. self.generates.set:lower())
+            description[#description+1] = localize(self.generates.set == 'Base' and 'k_baliatro_playing_card' or 'k_' .. self.generates.set:lower())
             return table.concat(description, ' ')
         elseif self.generates.min_dollars and self.generates.max_dollars then
             return '$' .. self.generates.min_dollars .. '-$' .. self.generates.max_dollars
@@ -111,8 +121,9 @@ BALIATRO.LootPlaceholder = SMODS.Center:extend {
     generate_one = function(self, card)
         if self.generates.set then
             local forced_key = card.ability.mirrored_key
-            local target = SMODS.create_card{set=self.generates.set, edition=self.generates.edition, no_edition=self.generates.edition ~= nil or nil, rarity=self.generates.rarity, legendary=self.generates.rarity == 4, key=forced_key}
-            if self.generates.set == 'Default' and self.generates.saturated then
+            local target = SMODS.create_card{set=self.generates.set, area=G.pack_cards, edition=self.generates.edition, no_edition=self.generates.edition ~= nil or nil, rarity=self.generates.rarity, legendary=self.generates.rarity == 4, key=forced_key}
+
+            if self.generates.set == 'Base' and self.generates.saturated then
                 local _enh = SMODS.poll_enhancement({guaranteed = true})
                 local _seal = SMODS.poll_seal({guaranteed = true})
                 local _ed = poll_edition('lph', nil, nil, true)
@@ -131,7 +142,7 @@ BALIATRO.LootPlaceholder = SMODS.Center:extend {
             if self.generates.immortal then
                 target:set_immortal(true)
             end
-            if self.generates.set ~= 'Default' and self.generates.mirrored and not forced_key then
+            if self.generates.set ~= 'Base' and self.generates.mirrored and not forced_key then
                 card.ability.mirrored_key = target.config.center.key
             end
             return target
@@ -149,7 +160,7 @@ BALIATRO.LootPlaceholder {
     key = 'two_common_joker',
     generates = {
         set = 'Joker',
-        rarity = 1,
+        rarity = 'Common',
         amount = 2,
     },
     rarity = 1,
@@ -162,7 +173,7 @@ BALIATRO.LootPlaceholder {
     key = 'four_common_joker',
     generates = {
         set = 'Joker',
-        rarity = 1,
+        rarity = 'Common',
         amount = 4,
     },
     rarity = 2,
@@ -175,7 +186,7 @@ BALIATRO.LootPlaceholder {
     key = 'six_common_joker',
     generates = {
         set = 'Joker',
-        rarity = 1,
+        rarity = 'Common',
         amount = 6,
     },
     rarity = 3,
@@ -188,7 +199,7 @@ BALIATRO.LootPlaceholder {
     key = 'negative_common_joker',
     generates = {
         set = 'Joker',
-        rarity = 1,
+        rarity = 'Common',
         edition = 'e_negative',
         amount = 1,
     },
@@ -202,7 +213,7 @@ BALIATRO.LootPlaceholder {
     key = 'eternal_rare_joker',
     generates = {
         set = 'Joker',
-        rarity = 3,
+        rarity = 'Rare',
         eternal = true,
         amount = 1,
     },
@@ -222,7 +233,7 @@ BALIATRO.LootPlaceholder {
     key = 'rare_joker',
     generates = {
         set = 'Joker',
-        rarity = 3,
+        rarity = 'Rare',
         amount = 1,
     },
     rarity = 3,
@@ -236,7 +247,7 @@ BALIATRO.LootPlaceholder {
     key = 'uncommon_joker',
     generates = {
         set = 'Joker',
-        rarity = 2,
+        rarity = 'Uncommon',
         amount = 1,
     },
     rarity = 2,
@@ -249,7 +260,7 @@ BALIATRO.LootPlaceholder {
     key = 'two_uncommon_jokers',
     generates = {
         set = 'Joker',
-        rarity = 2,
+        rarity = 'Uncommon',
         amount = 2,
     },
     rarity = 3,
@@ -377,7 +388,7 @@ BALIATRO.LootPlaceholder {
     key = 'negative_rare_joker',
     generates = {
         set = 'Joker',
-        rarity = 3,
+        rarity = 'Rare',
         edition = 'e_negative',
         amount = 1,
     },
@@ -391,7 +402,7 @@ BALIATRO.LootPlaceholder {
     key = 'legendary_joker',
     generates = {
         set = 'Joker',
-        rarity = 4,
+        rarity = 'Legendary',
         amount = 1,
     },
     rarity = 3,
@@ -477,7 +488,7 @@ BALIATRO.LootPlaceholder {
 BALIATRO.LootPlaceholder {
     key = 'six_playing_cards',
     generates = {
-        set = 'Default',
+        set = 'Base',
         amount = 6,
     },
     rarity = 1,
@@ -489,7 +500,7 @@ BALIATRO.LootPlaceholder {
 BALIATRO.LootPlaceholder {
     key = 'two_saturated_playing_cards',
     generates = {
-        set = 'Default',
+        set = 'Base',
         saturated = true,
         amount = 2,
     },
@@ -782,11 +793,11 @@ BALIATRO.goal_tooltip_filler = function(args)
         reward_nodes[#reward_nodes+1] = current
     end
 
-    local loc_target = {set='Goal', type='descriptions', key=goal_key, vars={}, nodes = desc_nodes}
+    local loc_target = {set='Goal', type='descriptions', key=goal_key, vars={}, nodes=desc_nodes}
     if goal.loc_vars and type(goal.loc_vars) == 'function' then
         local res = goal:loc_vars(config) or {}
-        loc_target.vars = loc_target.vars or res.vars
-        loc_target.key = loc_target.vars or res.key
+        loc_target.vars = res.vars or loc_target.vars
+        loc_target.key = res.key or loc_target.key
     end
 
     localize(loc_target)
@@ -899,6 +910,7 @@ create_UIBox_blind_choice = function(type, run_info)
     local blind_idx = type == 'Small' and 1 or type == 'Big' and 2 or 3
     local container = ret.nodes[1].nodes
     container[#container+1] = {n=G.UIT.R, config={align='cm', minh=0.4, func='blind_choice_goals', blind_idx=blind_idx, has_been_rendered=false}, nodes={}}
+    container[#container+1] = {n=G.UIT.R, config={align='cm', minh=0.2}, nodes={}}
     return ret
 end
 
@@ -1679,9 +1691,13 @@ SMODS.Booster {
     draw_hand = true,
 
 	create_card = function(self, card)
-        local queued_card = card.ability.placeholder_ref:remove(1)
+        local queued_card = table.remove(card.ability.placeholder_ref, 1)
         local lph = queued_card.config.center
-		return lph:generate_one(queued_card)
+		local ret = lph:generate_one(queued_card)
+        if card.ability.placeholder_ref[1] ~= queued_card then
+            queued_card:remove()
+        end
+        return ret
 	end,
 	ease_background_colour = function(self)
 		ease_colour(G.C.DYN_UI.MAIN, mix_colours(G.C.SECONDARY_SET.Planet, G.C.BLACK, 0.9))
@@ -1704,7 +1720,8 @@ SMODS.Booster {
 
 SMODS.Tag {
     key = 'loot_claim',
-    atlas = 'tags',
+    atlas = nil,
+    double_tag_incompat = true,
     pos = { x = 0, y = 0 },
     in_pool = function(self, args)
         return false
@@ -1713,7 +1730,7 @@ SMODS.Tag {
     apply = function(self, tag, context)
         if context.type == 'new_blind_choice' then
             if #G.loot.cards > 0 then
-                self:yep('+', G.C.GOLD, function()
+                tag:yep('+', G.C.GOLD, function()
                     local key = 'p_baliatro_loot_pack_1'
                     local card = Card(
                         G.play.T.x + G.play.T.w/2 - G.CARD_W*1.27/2,
@@ -1740,8 +1757,7 @@ SMODS.Tag {
 
 BALIATRO.skip_blind_loot_hook = function()
     if #G.loot.cards > 0 then
-        local _tag = G.P_TAGS['t_baliatro_loot_claim']
-        add_tag(_tag)
+        add_tag(Tag('tag_baliatro_loot_claim'))
     end
 end
 
@@ -1753,7 +1769,7 @@ BALIATRO.loot_target_cardarea = function(card)
     elseif card.ability.set == 'Voucher' then
         return nil
     end
-    return G.consumeable
+    return G.consumeables
 end
 
 
@@ -1787,10 +1803,10 @@ G.FUNCS.baliatro_take_card = function(e)
     G.TAROT_INTERRUPT = G.STATE
     G.STATE = G.STATES.PLAY_TAROT
     G.CONTROLLER.locks.use = true
-    if G.booster_pack and not G.booster_pack.alignment.offset.py and not (G.GAME.pack_choices and G.GAME.pack_choices > 1) then
-        G.booster_pack.alignment.offset.py = G.booster_pack.alignment.offset.y
-        G.booster_pack.alignment.offset.y = G.ROOM.T.y + 29
-    end
+    --if G.booster_pack and not G.booster_pack.alignment.offset.py and not (G.GAME.pack_choices and G.GAME.pack_choices > 1) then
+    --    G.booster_pack.alignment.offset.py = G.booster_pack.alignment.offset.y
+    --    G.booster_pack.alignment.offset.y = G.ROOM.T.y + 29
+    --end
 
     if not card.from_area then card.from_area = area end
     if area then area:remove_card(card) end
@@ -1806,10 +1822,10 @@ G.FUNCS.baliatro_take_card = function(e)
         G.CONTROLLER.locks.use = false
 
         if G.GAME.pack_choices and G.GAME.pack_choices > 1 and G.booster_pack then
-            if G.booster_pack.alignment.offset.py then
-                G.booster_pack.alignment.offset.y = G.booster_pack.alignment.offset.py
-                G.booster_pack.alignment.offset.py = nil
-            end
+            --if G.booster_pack.alignment.offset.py then
+            --    G.booster_pack.alignment.offset.y = G.booster_pack.alignment.offset.py
+            --    G.booster_pack.alignment.offset.py = nil
+            --end
             G.GAME.pack_choices = G.GAME.pack_choices - 1
         else
             G.CONTROLLER.interrupt.focus = true

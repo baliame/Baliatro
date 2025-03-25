@@ -2056,7 +2056,14 @@ return {
             },
         },
         Stake={},
-        Tag={},
+        Tag={
+            tag_baliatro_loot_claim = {
+                name = "Loot Claim Tag",
+                text = {
+                    "Claim your loot."
+                }
+            }
+        },
         Tarot={
             c_baliatro_ace_of_wands = {
                 name = "Ace of Wands",

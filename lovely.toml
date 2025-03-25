@@ -579,37 +579,35 @@ match_indent = true
 payload = '''
 if BALIATRO.feature_flags.loot and card.area == G.pack_cards and booster_obj and booster_obj.baliatro_loot_pack then
     local take_target = not card.config.center.no_take and BALIATRO.loot_target_cardarea(card) or nil
-    local use =
-    {
-        {n=G.UIT.R, config = {align = 'cl'}, nodes = {
-            {n=G.UIT.C, config={align = "cr"}, nodes={
-                {n=G.UIT.C, config={ref_table = card, align = "cr",maxw = 1.25, padding = 0.1, r=0.08, minw = 1.25, minh = 1, hover = true, shadow = true, colour = G.C.UI.BACKGROUND_INACTIVE, one_press = true, button = 'use_card', func = 'can_use_consumeable'}, nodes={
-                    {n=G.UIT.B, config = {w=0.1,h=0.6}},
-                    {n=G.UIT.T, config={text = localize('b_use'),colour = G.C.UI.TEXT_LIGHT, scale = 0.55, shadow = true}}
-                }}
-            }}
+    local use = {n=G.UIT.C, config = {align = 'cl'}, nodes = {
+        {n=G.UIT.R, config={ref_table = card, align = "bm",maxw = 1.25, padding = 0.1, r=0.08, minw = 1.25, minh = 1, hover = true, shadow = true, colour = G.C.UI.BACKGROUND_INACTIVE, one_press = true, button = 'use_card', func = 'can_use_consumeable'}, nodes={
+            {n=G.UIT.T, config={text = localize('b_use'),colour = G.C.UI.TEXT_LIGHT, scale = 0.55, shadow = true}}
         }}
-    }
-    local take =
-    {
-        {n=G.UIT.R, config = {align = 'cl'}, nodes = {
-            {n=G.UIT.C, config={align = "cr"}, nodes={
-                {n=G.UIT.C, config={ref_table = card, align = "cr",maxw = 1.25, padding = 0.1, r=0.08, minw = 1.25, minh = 1, hover = true, shadow = true, colour = G.C.UI.BACKGROUND_INACTIVE, one_press = true, button = 'baliatro_take_card', func = 'baliatro_can_take_card'}, nodes={
-                    {n=G.UIT.B, config = {w=0.1,h=0.6}},
-                    {n=G.UIT.T, config={text = localize('b_baliatro_take'),colour = G.C.UI.TEXT_LIGHT, scale = 0.55, shadow = true}}
-                }}
-            }}
+    }}
+    local take = {n=G.UIT.C, config = {align = 'cl'}, nodes = {
+        {n=G.UIT.R, config={ref_table = card, align = "bm",maxw = 1.25, padding = 0.1, r=0.08, minw = 1.25, minh = 1, hover = true, shadow = true, colour = G.C.UI.BACKGROUND_INACTIVE, one_press = true, button = 'baliatro_take_card', func = 'baliatro_can_take_card'}, nodes={
+            {n=G.UIT.T, config={text = localize('b_baliatro_take'),colour = G.C.UI.TEXT_LIGHT, scale = 0.55, shadow = true}}
         }}
-    }
+    }}
     local actions = {}
     if card.ability.consumeable then actions[#actions+1] = use end
     if take_target then actions[#actions+1] = take end
     local root = {n=G.UIT.ROOT, config = {padding = 0, colour = G.C.CLEAR}, nodes = {
-        {n = G.UIT.C, config = {padding = 0.15, align = 'cl'}, nodes = actions}
+        {n = G.UIT.R, config = {padding = 0.15, align = 'cm'}, nodes = actions}
     }}
     return root
 end
 '''
+
+## Ability to disable tags from being double tagged
+[[patches]]
+[patches.pattern]
+target = "tag.lua"
+pattern = "if self.name == 'Double Tag' and _context.tag.key ~= 'tag_double' then"
+match_indent = true
+position = 'at'
+payload = "if self.name == 'Double Tag' and _context.tag.key ~= 'tag_double' and not G.P_TAGS[_context.tag.key].double_tag_incompat then"
+
 
 ## Bypass BALIATRO copy_card restriction for deck viewer
 [[patches]]
