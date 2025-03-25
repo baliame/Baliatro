@@ -46,11 +46,20 @@ end
 
 local gsr = G.start_run
 G.start_run = function(self, args)
+    if BALIATRO.feature_flags.loot then
+        self.loot = CardArea(0, 1.2, G.CARD_W, G.CARD_H, {
+            card_limit = 12,
+            highlight_limit = 0,
+            card_w = G.CARD_W * 0.7,
+            type = 'loot',
+        })
+    end
     local ret = gsr(self, args)
     local saveTable = args.savetext or nil
     G.jokers.config.highlighted_limit = 5
     if BALIATRO.feature_flags.loot then
-        self.loot = CardArea(self.jokers.T.x + self.jokers.T.w/2 + 0.3 + 15, 1.2, G.CARD_W, G.CARD_H, {card_limit = 500, type = 'loot'})
+        self.loot.T.x = self.jokers.T.x + self.jokers.T.w/2 + 0.3 + 15
+        self.loot:hard_set_VT()
         if not saveTable then
             BALIATRO.generate_ante_goals()
         else
@@ -343,10 +352,10 @@ end
 local cc = copy_card
 
 -- Safeguard against copying immortal cards via other mods.
-function copy_card(other, new_card, card_scale, playing_card, strip_edition)
+function copy_card(other, new_card, card_scale, playing_card, strip_edition, bypass_baliatro_immortal)
     local copy = cc(other, new_card, card_scale, playing_card, strip_edition)
 
-    if BALIATRO.is_immortal(other) then
+    if not bypass_baliatro_immortal and BALIATRO.is_immortal(other) then
         if other.ability.set == 'Joker' then
             copy:set_perishable(true)
             copy.ability.perish_tally = 1

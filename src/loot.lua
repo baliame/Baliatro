@@ -1,5 +1,35 @@
 if BALIATRO.feature_flags.loot then
 SMODS.Atlas({key="BaliatroObjectiveIcons", path="BaliatroObjectiveIcons.png", px = 32, py = 32, atlas_table="ASSET_ATLAS"})
+SMODS.Atlas({key="BaliatroLoot", path="BaliatroLoot.png", px = 71, py = 95, atlas_table="ASSET_ATLAS"})
+
+
+SMODS.Consumable {
+    object_type = "Consumable",
+    set = "Loot",
+    key = "money",
+    pos = { x = 8, y = 0 },
+    cost = 1,
+    atlas = "BaliatroLoot",
+    no_take = true,
+    no_collection = true,
+    hidden = true,
+    soul_rate = 0,
+    soul_set = "Loot",
+    config = {
+        dollars = 1,
+    },
+
+    loc_vars = function(self, info_queue, card)
+        return {vars={card.ability.consumeable.dollars}}
+    end,
+
+    use = function(self, card, area, copier)
+        local used_tarot = copier or card
+        ease_dollars(card.ability.consumeable.dollars)
+
+        used_tarot:juice_up()
+    end
+}
 
 BALIATRO.LootPlaceholder = SMODS.Center:extend {
     discovered = false,
@@ -7,7 +37,7 @@ BALIATRO.LootPlaceholder = SMODS.Center:extend {
     cost = 3,
     config = {},
     set = 'LootPlaceholder',
-    atlas = 'baliatro_Baliatro',
+    atlas = 'baliatro_BaliatroLoot',
     class_prefix = 'lp',
     omit = true,
     generates = {
@@ -20,6 +50,12 @@ BALIATRO.LootPlaceholder = SMODS.Center:extend {
         'rarity',
         'weight',
     },
+
+    set_ability = function(self, card, initial, delay_sprites)
+        if self.generates and self.generates.edition and G.P_CENTERS[self.generates.edition] and (not G.P_CENTERS[self.generates.edition].config or not G.P_CENTERS[self.generates.edition].config.card_limit) then
+            card:set_edition(self.generates.edition)
+        end
+    end,
 
     pre_inject_class = function(self)
         BALIATRO.LootPlaceholderByRarity = {}
@@ -49,11 +85,12 @@ BALIATRO.LootPlaceholder = SMODS.Center:extend {
             if self.generates.immortal then
                 description[#description+1] = localize{type='name_text', set='Other', key='baliatro_immortal'}
             end
+            if self.generates.mirrored then
+                description[#description+1] = localize('k_baliatro_identical')
+            end
+
             if self.generates.saturated then
                 description[#description+1] = localize('k_baliatro_saturated')
-            end
-            if self.generates.nonplain then
-                description[#description+1] = localize('k_baliatro_non_plain')
             end
             if self.generates.rarity then
                 local vanilla_rarities = {[1] = 'common', [2] = 'uncommon', [3] = 'rare', [4] = 'legendary'}
@@ -69,6 +106,41 @@ BALIATRO.LootPlaceholder = SMODS.Center:extend {
             return '$' .. self.generates.min_dollars .. '-$' .. self.generates.max_dollars
         end
         return 'ERROR'
+    end,
+
+    generate_one = function(self, card)
+        if self.generates.set then
+            local forced_key = card.ability.mirrored_key
+            local target = SMODS.create_card{set=self.generates.set, edition=self.generates.edition, no_edition=self.generates.edition ~= nil or nil, rarity=self.generates.rarity, legendary=self.generates.rarity == 4, key=forced_key}
+            if self.generates.set == 'Default' and self.generates.saturated then
+                local _enh = SMODS.poll_enhancement({guaranteed = true})
+                local _seal = SMODS.poll_seal({guaranteed = true})
+                local _ed = poll_edition('lph', nil, nil, true)
+
+                target:set_ability(G.P_CENTERS[_enh])
+                target:set_seal(_seal)
+                target:set_edition(_ed)
+
+                if target.edition.config and target.edition.config.card_limit then
+                    target:set_immortal(true)
+                end
+            end
+            if self.generates.eternal then
+                target:set_eternal(true)
+            end
+            if self.generates.immortal then
+                target:set_immortal(true)
+            end
+            if self.generates.set ~= 'Default' and self.generates.mirrored and not forced_key then
+                card.ability.mirrored_key = target.config.center.key
+            end
+            return target
+        elseif self.generates.min_dollars and self.generates.max_dollars then
+            local target = SMODS.create_card{set='Loot', bypass_discovery_center=true, key='c_baliatro_money', area=G.pack_cards, key_append='lph', no_edition=true}
+            target.ability.consumeable.dollars = pseudorandom('lphdollars', self.generates.min_dollars, self.generates.max_dollars)
+            return target
+        end
+        return SMODS.create_card{set='Joker', key='j_joker'} -- failsafe
     end
 }
 
@@ -82,6 +154,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 1,
     weight = 5,
+    pos = {x = 1, y = 0},
 }
 
 -- 4 common jokers, rarity = 2
@@ -94,6 +167,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 2,
     weight = 5,
+    pos = {x = 2, y = 0},
 }
 
 -- 6 common jokers, rarity = 3
@@ -106,6 +180,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 3,
     weight = 5,
+    pos = {x = 3, y = 0},
 }
 
 -- 1 negative common joker, rarity = 2
@@ -119,6 +194,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 2,
     weight = 5,
+    pos = {x = 4, y = 0},
 }
 
 -- 1 eternal rare joker, rarity = 2
@@ -132,6 +208,12 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 2,
     weight = 5,
+    pos = {x = 5, y = 0},
+
+    set_ability = function(self, card, initial, delay_sprites)
+        BALIATRO.LootPlaceholder.set_ability(self, card, initial, delay_sprites)
+        card.ability.eternal = true
+    end
 }
 
 -- 1 rare joker, rarity = 3
@@ -145,6 +227,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 3,
     weight = 5,
+    pos = {x = 5, y = 0},
 }
 
 -- 1 uncommon joker, rarity = 2
@@ -158,6 +241,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 2,
     weight = 5,
+    pos = {x = 6, y = 0},
 }
 
 -- 2 uncommon jokers, rarity = 3
@@ -170,6 +254,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 3,
     weight = 5,
+    pos = {x = 7, y = 0},
 }
 
 -- 5-10 dollars, rarity = 1
@@ -181,6 +266,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 1,
     weight = 5,
+    pos = {x = 8, y = 0},
 }
 
 -- 10-20 dollars, rarity = 2
@@ -192,6 +278,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 2,
     weight = 5,
+    pos = {x = 9, y = 0},
 }
 
 -- 20-40 dollars, rarity = 3
@@ -203,6 +290,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 3,
     weight = 5,
+    pos = {x = 0, y = 1},
 }
 
 -- 1 foil joker, rarity = 1
@@ -215,6 +303,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 1,
     weight = 5,
+    pos = {x = 0, y = 0},
 }
 
 -- 1 holographic joker, rarity = 1
@@ -227,6 +316,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 1,
     weight = 5,
+    pos = {x = 0, y = 0},
 }
 
 -- 1 polychrome joker, rarity = 2
@@ -239,6 +329,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 2,
     weight = 5,
+    pos = {x = 0, y = 0},
 }
 
 -- 1 photographic joker, rarity = 2
@@ -251,6 +342,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 2,
     weight = 5,
+    pos = {x = 0, y = 0},
 }
 
 -- 1 negative joker, rarity = 3
@@ -263,6 +355,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 3,
     weight = 5,
+    pos = {x = 2, y = 0},
 }
 
 -- 1 negative uncommon joker, rarity = 3
@@ -276,6 +369,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 3,
     weight = 2,
+    pos = {x = 8, y = 1},
 }
 
 -- 1 negative rare joker, rarity = 3
@@ -289,6 +383,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 3,
     weight = 1,
+    pos = {x = 9, y = 1},
 }
 
 -- 1 legendary joker, rarity = 3
@@ -301,6 +396,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 3,
     weight = 1,
+    pos = {x = 1, y = 1},
 }
 
 -- 1 scenic joker, rarity = 1
@@ -313,6 +409,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 1,
     weight = 5,
+    pos = {x = 0, y = 0},
 }
 
 -- 1 upgraded joker, rarity = 3
@@ -325,6 +422,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 3,
     weight = 5,
+    pos = {x = 2, y = 1},
 }
 
 -- 4 tarot, rarity = 1
@@ -336,6 +434,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 1,
     weight = 5,
+    pos = {x = 3, y = 1},
 }
 
 -- 2 spectral, rarity = 2
@@ -347,6 +446,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 2,
     weight = 5,
+    pos = {x = 4, y = 1},
 }
 
 -- 1 postcard, rarity = 3
@@ -358,6 +458,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 3,
     weight = 3,
+    pos = {x = 5, y = 1},
 }
 
 -- 1 voucher, rarity = 3
@@ -369,6 +470,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 3,
     weight = 5,
+    pos = {x = 6, y = 1},
 }
 
 -- 6 playing cards, rarity = 1
@@ -380,6 +482,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 1,
     weight = 5,
+    pos = {x = 1, y = 2},
 }
 
 -- 2 saturated playing cards, rarity = 2
@@ -392,6 +495,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 2,
     weight = 5,
+    pos = {x = 2, y = 2},
 }
 
 -- 4 planets, rarity = 1
@@ -403,6 +507,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 1,
     weight = 5,
+    pos = {x = 3, y = 2},
 }
 
 -- 4 mirrored planets, rarity = 2
@@ -415,6 +520,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 2,
     weight = 5,
+    pos = {x = 5, y = 2},
 }
 
 -- 4 negative planets, rarity = 3
@@ -426,6 +532,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 3,
     weight = 5,
+    pos = {x = 4, y = 2},
 }
 
 -- 1 crystal ball, rarity = 3
@@ -438,6 +545,7 @@ BALIATRO.LootPlaceholder {
     },
     rarity = 3,
     weight = 5,
+    pos = {x = 7, y = 1},
 }
 
 BALIATRO.Goals = {}
@@ -625,22 +733,31 @@ end
 
 -- Callback function to update completion status on tooltip
 BALIATRO.completed_indicator = function(config, e)
-    if config.is_completed then
-        e.children[1].config.text = localize('k_baliatro_completed_ex')
-        e.children[1].config.colour = G.C.PALE_GREEN
-    elseif config.is_failed then
-        e.children[1].config.text = localize('k_baliatro_failed_ex')
-        e.children[1].config.colour = G.C.RED
-    elseif config.complete_if_not_failed then
-        e.children[1].config.text = localize('k_baliatro_autocompletes_ex')
-        e.children[1].config.colour = G.C.IMPORTANT
+    local finalized = config.is_completed or config.is_failed
+    local ac = config.complete_if_not_failed and not config.is_failed
+    local desired = ac and -3 or finalized and -1 or config.progress
+    if e.config.last_progress_calc ~= desired then
+        e.config.last_progress_calc = desired
+        if config.is_completed then
+            e.children[1].config.text = localize('k_baliatro_completed_ex')
+            e.children[1].config.colour = G.C.PALE_GREEN
+        elseif config.is_failed then
+            e.children[1].config.text = localize('k_baliatro_failed_ex')
+            e.children[1].config.colour = G.C.RED
+        elseif config.complete_if_not_failed then
+            e.children[1].config.text = localize('k_baliatro_autocompletes_ex')
+            e.children[1].config.colour = G.C.IMPORTANT
+        else
+            e.children[1].config.text = localize('k_baliatro_progress_colon') .. ' ' .. string.format("%d", config.progress * 100) ..'%'
+            e.children[1].config.colour = G.C.IMPORTANT
+        end
+        e.UIBox:recalculate(true)
     end
-    e.UIBox:recalculate(true)
 end
 
 -- Generates contents for goal tooltips
 BALIATRO.goal_tooltip_filler = function(args)
-    local goal_key, rewards, config = args[1], args[2], args[3]
+    local goal_key, rewards, config, in_blind = args[1], args[2], args[3], args[4]
     local goal = BALIATRO.Goals[goal_key]
 
 
@@ -665,11 +782,11 @@ BALIATRO.goal_tooltip_filler = function(args)
         reward_nodes[#reward_nodes+1] = current
     end
 
-    local loc_target = {set='Goal', type='descriptions', key=goal_key, vars={}, nodes=desc_nodes}
+    local loc_target = {set='Goal', type='descriptions', key=goal_key, vars={}, nodes = desc_nodes}
     if goal.loc_vars and type(goal.loc_vars) == 'function' then
         local res = goal:loc_vars(config) or {}
-        loc_target.vars = res.vars or loc_target.vars
-        loc_target.key = res.key or loc_target.key
+        loc_target.vars = loc_target.vars or res.vars
+        loc_target.key = loc_target.vars or res.key
     end
 
     localize(loc_target)
@@ -678,9 +795,32 @@ BALIATRO.goal_tooltip_filler = function(args)
         main_rows[#main_rows+1] = {n = G.UIT.R, config={align="cm"}, nodes=row}
     end
     main_rows[#main_rows+1] = {n=G.UIT.R, config={align="cm", minh=0.2}, nodes = {}}
-    main_rows[#main_rows+1] = {n=G.UIT.R, config={align="cm", padding = 0.03, colour=darken(G.C.JOKER_GREY, 0.2), func='HUD_' .. goal_key .. '_completed_indicator'}, nodes = {
-        {n = G.UIT.T, config={text = "", scale = progression_scale, colour = G.C.BLACK}}
-    }}
+
+
+    local prog_start_text = ""
+    local prog_start_colour = G.C.BLACK
+    if config.is_completed or config.is_failed or config.complete_if_not_failed then
+        if config.is_completed then
+            prog_start_text = localize('k_baliatro_completed_ex')
+            prog_start_colour = G.C.PALE_GREEN
+        elseif config.is_failed then
+            prog_start_text = localize('k_baliatro_failed_ex')
+            prog_start_colour = G.C.RED
+        elseif config.complete_if_not_failed then
+            prog_start_text = localize('k_baliatro_autocompletes_ex')
+            prog_start_colour = G.C.IMPORTANT
+        end
+    end
+
+    if in_blind then
+        main_rows[#main_rows+1] = {n=G.UIT.R, config={align="cm", padding = 0.03, colour=darken(G.C.JOKER_GREY, 0.2), func='HUD_' .. goal_key .. '_completed_indicator', last_progress_calc = -2}, nodes = {
+            {n = G.UIT.T, config={text = prog_start_text, scale = progression_scale, colour = prog_start_colour}}
+        }}
+    else
+        main_rows[#main_rows+1] = {n=G.UIT.R, config={align="cm", padding = 0.03, colour=darken(G.C.JOKER_GREY, 0.2)}, nodes = {
+            {n = G.UIT.T, config={text = prog_start_text, scale = progression_scale, colour = prog_start_colour}}
+        }}
+    end
     main_rows[#main_rows+1] = {n=G.UIT.R, config={align="cm", minh=0.2}, nodes = {}}
     main_rows[#main_rows+1] = {n=G.UIT.R, config={align="cm"}, nodes = {
         {n=G.UIT.C, config={align="tm"}, nodes=reward_nodes},
@@ -693,14 +833,12 @@ end
 
 -- Callback function to update goal sprites
 BALIATRO.goal_sprite_updater = function(config, e)
-    if e.config.last_progress_drawn ~= -1 and config.is_completed or config.is_failed then
-        e.config.last_progress_drawn = -1
-        e.config.object = BALIATRO.objective_cached_sprite(BALIATRO.calc_objective_sprite_pos(config))
+    local finalized = config.is_completed or config.is_failed
+    local desired = finalized and -1 or config.progress
+    if e.config.last_progress_drawn ~= desired then
+        e.config.last_progress_drawn = desired
+        e.config.object:set_sprite_pos(BALIATRO.calc_objective_sprite_pos(config))
     end
-    if e.config.last_progress_drawn == -1 then return end
-    if e.config.last_progress_drawn == config.progress then return end
-    e.config.last_progress_drawn = config.progress
-    e.config.object = BALIATRO.objective_cached_sprite(BALIATRO.calc_objective_sprite_pos(config))
 end
 
 -- HUD function to generate contents of blind goals indicator on top left blind HUD
@@ -718,8 +856,8 @@ G.FUNCS.HUD_blind_goals = function(e)
                 G.FUNCS['HUD_' .. goal_key .. '_completed_indicator'] = function(e) BALIATRO.completed_indicator(conf, e) end
                 G.FUNCS['HUD_' .. goal_key .. '_update_sprite'] = function(e) BALIATRO.goal_sprite_updater(conf, e) end
 
-                local tooltip = {title = "Goal", filler = {func = BALIATRO.goal_tooltip_filler, args = {goal_key, goal_data.reward, conf}}}--
-                local node_def = {n=G.UIT.C, config={align='cm', on_demand_tooltip = tooltip}, nodes={{n = G.UIT.O, config = {object = goal_sprite, last_progress_drawn = goal_data.config.progress, func = 'HUD_' .. goal_key .. '_update_sprite'}}}}
+                local tooltip = {title = "Goal", filler = {func = BALIATRO.goal_tooltip_filler, args = {goal_key, goal_data.reward, conf, true}}}--
+                local node_def = {n=G.UIT.C, config={align='cm', on_demand_tooltip = tooltip}, nodes={{n = G.UIT.O, config = {object = goal_sprite, last_progress_drawn = -2, func = 'HUD_' .. goal_key .. '_update_sprite'}}}}
                 e.UIBox:set_parent_child(node_def, e)
             end
         end
@@ -728,6 +866,40 @@ G.FUNCS.HUD_blind_goals = function(e)
     end
     --BALIATRO.update_goal_progresses(e)
     --
+end
+
+
+G.FUNCS.blind_choice_goals = function(e)
+    local blind_idx = e.config.blind_idx
+    if not e.config.has_been_rendered then
+        for _, child in ipairs(e.children) do
+            child:remove()
+        end
+        e.children = {}
+        for goal_key, goal_data in pairs(G.GAME.ante_goals[blind_idx]) do
+            local conf = goal_data.config
+
+            local goal_sprite = BALIATRO.objective_cached_sprite(BALIATRO.calc_objective_sprite_pos(conf))
+            local tooltip = {title = "Goal", filler = {func = BALIATRO.goal_tooltip_filler, args = {goal_key, goal_data.reward, conf, false}}}
+            local node_def = {n=G.UIT.C, config={align='cm', on_demand_tooltip = tooltip}, nodes={
+                {n = G.UIT.O, config = {object = goal_sprite}}
+            }}
+            e.UIBox:set_parent_child(node_def, e)
+        end
+        e.config.has_been_rendered = true
+        e.UIBox:recalculate(true)
+    end
+end
+
+local cuibbc = create_UIBox_blind_choice
+
+create_UIBox_blind_choice = function(type, run_info)
+    local ret = cuibbc(type, run_info)
+    type = type or 'Small'
+    local blind_idx = type == 'Small' and 1 or type == 'Big' and 2 or 3
+    local container = ret.nodes[1].nodes
+    container[#container+1] = {n=G.UIT.R, config={align='cm', minh=0.4, func='blind_choice_goals', blind_idx=blind_idx, has_been_rendered=false}, nodes={}}
+    return ret
 end
 
 -- Generate a loot of a given rarity
@@ -824,7 +996,10 @@ function BALIATRO.add_round_eval_goal(goal, completed, pitch)
         func = function()
             --Add the far left text and context first:
             local left_text = {}
-            table.insert(left_text, {n=G.UIT.O, config={object = DynaText({string = localize{type = 'name_text', set = "Goal", key = goal}, colours = {G.C.FILTER}, shadow = true, pop_in = 0, scale = 0.6*scale, silent = true})}})
+            local nt = localize{type = 'name_text', set = "Goal", key = goal}
+            local ntl = nt:len()
+            local ns = ((ntl > 30 and 0.4) or (ntl > 20 and 0.5) or 0.6) * scale
+            table.insert(left_text, {n=G.UIT.O, config={object = DynaText({string = nt, colours = {G.C.FILTER}, shadow = true, pop_in = 0, scale = ns, silent = true})}})
             local full_row = {n=G.UIT.R, config={align = "cm", minw = 5}, nodes={
                 {n=G.UIT.C, config={padding = 0.05, minw = width*0.55, minh = 0.61, align = "cl"}, nodes=left_text},
                 {n=G.UIT.C, config={padding = 0.05,minw = width*0.45, align = "cr"}, nodes={{n=G.UIT.C, config={align = "cm", id = 'goal_'..goal},nodes={}}}}
@@ -842,7 +1017,7 @@ function BALIATRO.add_round_eval_goal(goal, completed, pitch)
         func = function()
             G.round_eval:add_child(
                     {n=G.UIT.R, config={align = "cm", id = 'dollar_row_'..(dollar_row+1)..'_'..goal}, nodes={
-                        {n=G.UIT.O, config={object = DynaText({string = {localize(completed and 'k_baliatro_completed_ex' or 'k_baliatro_failed_ex')}, colours = {completed and G.C.GREEN or G.C.RED}, shadow = true, pop_in = 0, scale = 0.5, float = true})}}
+                        {n=G.UIT.O, config={object = DynaText({string = {localize(completed and (completed == 'overflow' and 'k_baliatro_overflow' or 'k_baliatro_completed_ex') or 'k_baliatro_failed_ex')}, colours = {completed and (completed == 'overflow' and G.C.IMPORTANT or G.C.GREEN) or G.C.RED}, shadow = true, pop_in = 0, scale = 0.5, float = true})}}
                     }},
                     G.round_eval:get_UIE_by_ID('goal_'..goal))
 
@@ -903,14 +1078,27 @@ BALIATRO.evaluate_round_goals = function()
     for goal_key, goal_data in pairs(G.GAME.ante_goals[G.GAME.blind_idx]) do
         local conf = goal_data.config
         local success = false
-        if conf.is_completed or (conf.complete_if_not_failed and not conf.is_failed) then success = true end
+        if conf.is_completed or (conf.complete_if_not_failed and not conf.is_failed) then
+            success = true
+            conf.is_completed = true
+        else
+            conf.is_failed = true
+        end
 
         G.GAME.current_round.goal_evals[goal_key] = success
 
         if success then
+            local overflow = false
             for _, loot in ipairs(goal_data.reward) do
-            local card = SMODS.create_card{area = G.loot, set = "LootPlaceholder", key = loot, discover = true, bypass_discovery_center = true, skip_materialize = true, key_append = "loot"}
-            G.loot:emplace(card)
+                if #G.loot >= G.loot.config.card_limit then
+                    overflow = true
+                    break
+                end
+                local card = SMODS.create_card{area = G.loot, set = "LootPlaceholder", key = loot, discover = true, bypass_discovery_center = true, skip_materialize = true, key_append = "loot"}
+                G.loot:emplace(card)
+            end
+            if overflow then
+                G.GAME.current_round.goal_evals[goal_key] = "overflow"
             end
         end
     end
@@ -953,17 +1141,15 @@ BALIATRO.goal_rank_score_helper = function(self, goal)
     return {vars = vars}
 end
 
-
 -- Helper function for loc_vars of fail_on_ranks goals.
 BALIATRO.goal_no_rank_score_helper = function(self, goal)
-    local vars = {goal.count}
+    local vars = {}
     for k, _ in pairs(goal.fail_on_ranks) do
         vars[#vars+1] = localize(k, 'ranks')
     end
 
     return {vars = vars}
 end
-
 
 -- Play 2x containing Two Pair, rarity 2, reward: 2x(1-2)
 BALIATRO.Goal {
@@ -977,7 +1163,7 @@ BALIATRO.Goal {
         count = 2,
     },
     loc_vars = function(self, goal)
-        return {vars = {goal.count, goal.hand}}
+        return {vars = {goal.count, goal.has_hand}}
     end
 }
 
@@ -1154,7 +1340,7 @@ BALIATRO.Goal {
     },
 
     on_create = function(self, goal)
-        local els = BALIATRO.nrandom_elements(SMODS.Suits, 2, pseudoseed("goal2s14"..G.GAME.round_resets.ante))
+        local els = BALIATRO.nrandom_elements(SMODS.Suits, 2, "goal2s14"..G.GAME.round_resets.ante)
         goal.score_suits = {}
         for _, el in ipairs(els) do goal.score_suits[el[2]] = true end
     end,
@@ -1174,7 +1360,7 @@ BALIATRO.Goal {
     },
 
     on_create = function(self, goal)
-        local els = BALIATRO.nrandom_elements(SMODS.Ranks, 3, pseudoseed("goal3r5"..G.GAME.round_resets.ante))
+        local els = BALIATRO.nrandom_elements(SMODS.Ranks, 3, "goal3r5"..G.GAME.round_resets.ante)
         goal.score_ranks = {}
         for _, el in ipairs(els) do goal.score_ranks[el[2]] = true end
     end,
@@ -1194,7 +1380,7 @@ BALIATRO.Goal {
     },
 
     on_create = function(self, goal)
-        local els = BALIATRO.nrandom_elements(SMODS.Ranks, 3, pseudoseed("goal3nr"..G.GAME.round_resets.ante))
+        local els = BALIATRO.nrandom_elements(SMODS.Ranks, 3, "goal3nr"..G.GAME.round_resets.ante)
         goal.fail_on_ranks = {}
         for _, el in ipairs(els) do goal.fail_on_ranks[el[2]] = true end
     end,
@@ -1214,7 +1400,7 @@ BALIATRO.Goal {
     },
 
     on_create = function(self, goal)
-        local els = BALIATRO.nrandom_elements(SMODS.Suits, 1, pseudoseed("goal1ns"..G.GAME.round_resets.ante))
+        local els = BALIATRO.nrandom_elements(SMODS.Suits, 1, "goal1ns"..G.GAME.round_resets.ante)
         goal.fail_on_suits = {}
         for _, el in ipairs(els) do goal.fail_on_suits[el[2]] = true end
     end,
@@ -1234,7 +1420,7 @@ BALIATRO.Goal {
     },
 
     on_create = function(self, goal)
-        local els = BALIATRO.nrandom_elements(SMODS.Suits, 2, pseudoseed("goal2ns"..G.GAME.round_resets.ante))
+        local els = BALIATRO.nrandom_elements(SMODS.Suits, 2, "goal2ns"..G.GAME.round_resets.ante)
         goal.fail_on_suits = {}
         for _, el in ipairs(els) do goal.fail_on_suits[el[2]] = true end
     end,
@@ -1312,7 +1498,7 @@ BALIATRO.Goal {
     end,
 
     loc_vars = function(self, goal)
-        return {vars = {goal.fail_on_different_hands_played - 1}}
+        return {vars = {goal.fail_on_different_hands_played}}
     end
 }
 
@@ -1364,5 +1550,273 @@ BALIATRO.Goal {
         return {vars = {goal.score_percentage * 100}}
     end
 }
+
+BALIATRO._loot_view = nil
+
+G.FUNCS.baliatro_can_discard_loot = function(e)
+    if BALIATRO._loot_view and #BALIATRO._loot_view.highlighted > 0 then
+        e.config.colour = G.C.RED
+        e.config.button = 'baliatro_discard_unwanted_loot'
+    else
+        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+        e.config.button = nil
+    end
+end
+
+G.FUNCS.baliatro_discard_unwanted_loot = function(e)
+    if BALIATRO._loot_view then
+        local destroyed_cards = {}
+        local destroyed_cards_hidden = {}
+        local new_count = #G.loot.cards
+        for _, card in ipairs(BALIATRO._loot_view.highlighted) do
+            destroyed_cards[#destroyed_cards+1] = card
+            destroyed_cards_hidden[#destroyed_cards_hidden+1] = card.orig_card
+            new_count = new_count - 1
+        end
+
+        local uie = e.UIBox:get_UIE_by_ID('loot_card_count')
+        uie.config.text = '' .. new_count .. ' / ' .. G.loot.config.card_limit
+        uie.UIBox:recalculate()
+        BALIATRO._loot_view:unhighlight_all()
+
+        G.E_MANAGER:add_event(Event({trigger = 'immediate', blockable = false,
+            func = function()
+                for i, card in ipairs(destroyed_cards) do
+                    destroyed_cards_hidden[i]:remove()
+                    card:start_dissolve()
+                end
+                save_run()
+                return true
+            end
+        }))
+
+        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 2.0, blockable = false,
+            func = function()
+                e.disable_button = false
+                return true
+            end
+        }))
+    end
+end
+
+BALIATRO.tab_loot = function(simple)
+    local jg = darken(G.C.JOKER_GREY, 0.1)
+    local loot_nodes = {}
+
+    if G.loot.cards and #G.loot.cards > 0 then
+        BALIATRO._loot_view = CardArea(
+            G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2,
+            G.ROOM.T.h,
+            8 * G.CARD_W,
+            0.8 * G.CARD_H,
+            {
+                card_limit = G.loot.config.card_limit,
+                type = 'title',
+                view_deck = true,
+                highlight_limit = G.loot.config.card_limit,
+                card_w = G.CARD_W * 0.7,
+                draw_layers = { 'card' }
+            }
+        )
+        BALIATRO._loot_view.can_highlight = function(self, card) return true end
+        for _, card in ipairs(G.loot.cards) do
+            local copy = copy_card(card, nil, 0.7)
+            copy.T.x = BALIATRO._loot_view.T.x + BALIATRO._loot_view.T.w / 2
+            copy.T.y = BALIATRO._loot_view.T.y
+            copy.orig_card = card
+            copy:hard_set_T()
+            BALIATRO._loot_view:emplace(copy)
+        end
+        loot_nodes[#loot_nodes+1] = {n = G.UIT.O, config = {object = BALIATRO._loot_view}}
+    end
+
+    local ret = {n = G.UIT.ROOT, config = {align = "cm", colour = G.C.CLEAR}, nodes = {
+        {n = G.UIT.C, config = {align = "tm", padding = 0.1, colour = jg, r = 0.1}, nodes = {
+            {n = G.UIT.R, config = {align = "cm"}, nodes = loot_nodes},
+            {n = G.UIT.R, config = {align = "cm", minh = 0.2}, nodes = {}},
+            {n = G.UIT.R, config = {align = "cr"}, nodes = {
+                {n = G.UIT.T, config = {id = 'loot_card_count', text = '' .. #G.loot.cards .. ' / ' .. G.loot.config.card_limit, scale = 0.4, colour = G.C.UI.TEXT_LIGHT}}
+            }},
+            {n = G.UIT.R, config = {align = "cm"}, nodes = {
+                {n = G.UIT.T, config = {text = localize((G.loot.cards and #G.loot.cards > 0) and "k_baliatro_skip_to_claim_loot" or "k_baliatro_no_loot_to_claim"), scale = 0.5, colour = G.C.UI.TEXT_LIGHT}},
+            }},
+            {n = G.UIT.R, config = {align = "cm"}, nodes = {
+                {n=G.UIT.C, config={id = 'discard_unwanted_loot', align = "tm", minw = 2.5, padding = 0.3, r = 0.1, hover = true, colour = G.C.RED, button = "baliatro_discard_unwanted_loot", one_press = true, shadow = true, func = 'baliatro_can_discard_loot'}, nodes={
+                    {n=G.UIT.R, config={align = "bcm", padding = 0}, nodes={
+                        {n=G.UIT.T, config={text = localize('b_baliatro_discard_unwanted_loot'), scale = 0.5, colour = G.C.UI.TEXT_LIGHT, focus_args = {button = 'x', orientation = 'bm'}, func = 'set_button_pip'}}
+                    }},
+                }},
+            }},
+        }}
+    }}
+    return ret
+end
+
+SMODS.Tab {
+    key = 'loot',
+    tab_dialog = 'baliatro_run_info',
+    order = 28,
+    func = function(self)
+        return BALIATRO.tab_loot(false)
+    end
+}
+
+SMODS.Booster {
+	key = "loot_pack_1",
+    name = "Loot Pack",
+	kind = "Loot",
+	atlas = "BaliatroPacks",
+	pos = { x = 0, y = 0 },
+    no_collection = true,
+    baliatro_loot_pack = true,
+    in_pool = function(self, args)
+        return false
+    end,
+	config = { extra = 3, choose = 1 },
+	cost = 1,
+	order = 1,
+	weight = 0.0001,
+    draw_hand = true,
+
+	create_card = function(self, card)
+        local queued_card = card.ability.placeholder_ref:remove(1)
+        local lph = queued_card.config.center
+		return lph:generate_one(queued_card)
+	end,
+	ease_background_colour = function(self)
+		ease_colour(G.C.DYN_UI.MAIN, mix_colours(G.C.SECONDARY_SET.Planet, G.C.BLACK, 0.9))
+		ease_background_colour({ new_colour = G.C.PALE_GREEN, special_colour = G.C.BLACK, contrast = 3 })
+	end,
+	loc_vars = BALIATRO.booster_pack_locvars,
+	group_key = "k_baliatro_loot_pack",
+    set_ability = function(self, card, initial, delay_sprites)
+        local ph_ref = {}
+        for i, ref in ipairs(G.loot.cards) do
+            for j = 1, ref.config.center.generates.amount or 1 do
+                ph_ref[#ph_ref+1] = ref
+            end
+        end
+        card.ability.placeholder_ref = ph_ref
+        card.ability.extra = #ph_ref
+        card.ability.choose = #ph_ref
+    end
+}
+
+SMODS.Tag {
+    key = 'loot_claim',
+    atlas = 'tags',
+    pos = { x = 0, y = 0 },
+    in_pool = function(self, args)
+        return false
+    end,
+
+    apply = function(self, tag, context)
+        if context.type == 'new_blind_choice' then
+            if #G.loot.cards > 0 then
+                self:yep('+', G.C.GOLD, function()
+                    local key = 'p_baliatro_loot_pack_1'
+                    local card = Card(
+                        G.play.T.x + G.play.T.w/2 - G.CARD_W*1.27/2,
+                        G.play.T.y + G.play.T.h/2 - G.CARD_H*1.27/2,
+                        G.CARD_W*1.27,
+                        G.CARD_H*1.27,
+                        G.P_CARDS.empty,
+                        G.P_CENTERS[key],
+                        {bypass_discovery_center = true, bypass_discovery_ui = true}
+                    )
+                    card.cost = 0
+                    card.from_tag = true
+                    G.FUNCS.use_card({config = {ref_table = card}})
+                    card:start_materialize()
+                    G.CONTROLLER.locks[tag.ID] = nil
+                    return true
+                end)
+                tag.triggered = true
+                return true
+            end
+        end
+    end,
+}
+
+BALIATRO.skip_blind_loot_hook = function()
+    if #G.loot.cards > 0 then
+        local _tag = G.P_TAGS['t_baliatro_loot_claim']
+        add_tag(_tag)
+    end
+end
+
+BALIATRO.loot_target_cardarea = function(card)
+    if card.ability.set == 'Default' or card.ability.set == 'Enhanced' then
+        return G.hand, true
+    elseif card.ability.set == 'Joker' then
+        return G.jokers
+    elseif card.ability.set == 'Voucher' then
+        return nil
+    end
+    return G.consumeable
+end
+
+
+G.FUNCS.baliatro_can_take_card = function(e)
+    local card = e.config.ref_table
+    local card_limit = card.edition and card.edition.card_limit or 0
+    local cardarea, bypass = BALIATRO.loot_target_cardarea(card)
+
+    if cardarea and (bypass or cardarea.config.card_limit + card_limit > #cardarea.cards) then
+        e.config.colour = G.C.GREEN
+        e.config.button = 'baliatro_take_card'
+    else
+        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+        e.config.button = nil
+    end
+end
+
+G.FUNCS.baliatro_take_card = function(e)
+    e.config.button = nil
+    local card = e.config.ref_table
+    local area = card.area
+    local prev_state = G.STATE
+    local cardarea, bypass = BALIATRO.loot_target_cardarea(card)
+
+    if not cardarea then return end
+
+    if card.children.use_button then card.children.use_button:remove(); card.children.use_button = nil end
+    if card.children.sell_button then card.children.sell_button:remove(); card.children.sell_button = nil end
+    if card.children.price then card.children.price:remove(); card.children.price = nil end
+
+    G.TAROT_INTERRUPT = G.STATE
+    G.STATE = G.STATES.PLAY_TAROT
+    G.CONTROLLER.locks.use = true
+    if G.booster_pack and not G.booster_pack.alignment.offset.py and not (G.GAME.pack_choices and G.GAME.pack_choices > 1) then
+        G.booster_pack.alignment.offset.py = G.booster_pack.alignment.offset.y
+        G.booster_pack.alignment.offset.y = G.ROOM.T.y + 29
+    end
+
+    if not card.from_area then card.from_area = area end
+    if area then area:remove_card(card) end
+
+    card:add_to_deck()
+    cardarea:emplace(card)
+    play_sound('card1', 0.8, 0.6)
+    play_sound('generic1')
+
+    G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.2, func = function()
+        G.STATE = prev_state
+        G.TAROT_INTERRUPT = nil
+        G.CONTROLLER.locks.use = false
+
+        if G.GAME.pack_choices and G.GAME.pack_choices > 1 and G.booster_pack then
+            if G.booster_pack.alignment.offset.py then
+                G.booster_pack.alignment.offset.y = G.booster_pack.alignment.offset.py
+                G.booster_pack.alignment.offset.py = nil
+            end
+            G.GAME.pack_choices = G.GAME.pack_choices - 1
+        else
+            G.CONTROLLER.interrupt.focus = true
+            G.FUNCS.end_consumeable(nil, 0.2)
+        end
+        return true
+    end}))
+end
 
 end

@@ -793,13 +793,13 @@ function BALIATRO.calculate_card_upgrade(context, card)
 end
 
 function BALIATRO.nrandom_elements(t, n, seed)
-    if type(seed) == 'string' then seed = pseudoseed(seed) end
     local _t = {}
     local tc = 0
     for k, v in pairs(t) do _t[k] = v; tc = tc + 1 end
     local ret = {}
     repeat
-        local _v, _k = pseudorandom_element(_t, seed)
+        local iseed = pseudoseed(seed)
+        local _v, _k = pseudorandom_element(_t, iseed)
         if _v then
             ret[#ret+1] = {_v, _k}
             _t[_k] = nil
@@ -808,7 +808,6 @@ function BALIATRO.nrandom_elements(t, n, seed)
     until not _v or #ret >= n or tc <= 0
     return ret
 end
-
 return {
     name = "Baliatro Utils",
 }

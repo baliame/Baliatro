@@ -49,7 +49,7 @@ return {
                 name = 'Play less than five cards',
                 text = {
                     'Play no hand containing',
-                    'at least {C:attention}#1#{} cards'
+                    'more than {C:attention}#1#{} cards'
                 }
             },
 
@@ -1475,6 +1475,227 @@ return {
                 },
             },
         },
+        Loot={
+            c_baliatro_money = {
+                name = "Money",
+                text = {
+                    "Grants {C:money}$#1#{} when used.",
+                }
+            },
+        },
+        LootPlaceholder={
+            lp_baliatro_two_common_joker = {
+                name = "Two Common Jokers",
+                text = {
+                    "Grants {C:attention}2{} {C:blue}Common{}",
+                    "Jokers when claimed.",
+                }
+            },
+            lp_baliatro_four_common_joker = {
+                name = "Four Common Jokers",
+                text = {
+                    "Grants {C:attention}4{} {C:blue}Common{}",
+                    "Jokers when claimed.",
+                }
+            },
+            lp_baliatro_six_common_joker = {
+                name = "Six Common Jokers",
+                text = {
+                    "Grants {C:attention}6{} {C:blue}Common{}",
+                    "Jokers when claimed.",
+                }
+            },
+            lp_baliatro_negative_common_joker = {
+                name = "Negative Common Joker",
+                text = {
+                    "Grants {C:attention}1{} {C:dark_edition}Negative{}",
+                    "{C:blue}Common{} Joker when claimed.",
+                }
+            },
+            lp_baliatro_eternal_rare_joker = {
+                name = "Eternal Rare Joker",
+                text = {
+                    "Grants {C:attention}1{} {C:attention}Eternal{}",
+                    "{C:red}Rare{} Joker when claimed."
+                }
+            },
+            lp_baliatro_rare_joker = {
+                name = "Rare Joker",
+                text = {
+                    "Grants {C:attention}1{} {C:red}Rare{}",
+                    "Joker when claimed."
+                }
+            },
+            lp_baliatro_uncommon_joker = {
+                name = "Uncommon Joker",
+                text = {
+                    "Grants {C:attention}1{} {C:green}Uncommon{}",
+                    "Joker when claimed."
+                }
+            },
+            lp_baliatro_two_uncommon_jokers = {
+                name = "Two Uncommon Jokers",
+                text = {
+                    "Grants {C:attention}2{} {C:green}Uncommon{}",
+                    "Jokers when claimed."
+                }
+            },
+            lp_baliatro_small_dollars = {
+                name = "Lump of Coins",
+                text = {
+                    "Grants {C:money}$5-$10{}",
+                    "when claimed."
+                }
+            },
+            lp_baliatro_medium_dollars = {
+                name = "Bag of Coins",
+                text = {
+                    "Grants {C:money}$10-$20{}",
+                    "when claimed."
+                }
+            },
+            lp_baliatro_big_dollars = {
+                name = "Stack of Bills",
+                text = {
+                    "Grants {C:money}$20-$40{}",
+                    "when claimed."
+                }
+            },
+            lp_baliatro_foil_joker = {
+                name = "Foil Joker",
+                text = {
+                    "Grants {C:attention}1{} {C:dark_edition}Foil{}",
+                    "Joker when claimed."
+                }
+            },
+            lp_baliatro_holo_joker = {
+                name = "Holographic Joker",
+                text = {
+                    "Grants {C:attention}1{} {C:dark_edition}Holographic{}",
+                    "Joker when claimed."
+                }
+            },
+            lp_baliatro_polychrome_joker = {
+                name = "Polychrome Joker",
+                text = {
+                    "Grants {C:attention}1{} {C:dark_edition}Polychrome{}",
+                    "Joker when claimed."
+                }
+            },
+            lp_baliatro_photographic_joker = {
+                name = "Photographic Joker",
+                text = {
+                    "Grants {C:attention}1{} {C:dark_edition}Photographic{}",
+                    "Joker when claimed."
+                }
+            },
+            lp_baliatro_scenic_joker = {
+                name = "Scenic Joker",
+                text = {
+                    "Grants {C:attention}1{} {C:dark_edition}Scenic{}",
+                    "Joker when claimed."
+                }
+            },
+            lp_baliatro_negative_uncommon_joker = {
+                name = "Negative Uncommon Joker",
+                text = {
+                    "Grants {C:attention}1{} {C:dark_edition}Negative{}",
+                    "{C:green}Uncommon{} Joker when claimed."
+                }
+            },
+            lp_baliatro_negative_rare_joker = {
+                name = "Negative Rare Joker",
+                text = {
+                    "Grants {C:attention}1{} {C:dark_edition}Negative{}",
+                    "{C:red}Rare{} Joker when claimed."
+                }
+            },
+            lp_baliatro_legendary_joker = {
+                name = "Legendary Joker",
+                text = {
+                    "Grants {C:attention}1{} {C:legendary}Legendary{}",
+                    "Joker when claimed."
+                }
+            },
+            lp_baliatro_upgraded_joker = {
+                name = "Upgraded Joker",
+                text = {
+                    "Grants {C:attention}1{} {C:purple}Upgraded{}",
+                    "Joker when claimed."
+                }
+            },
+            lp_baliatro_four_tarot_cards = {
+                name = "Four Tarot Cards",
+                text = {
+                    "Grants {C:attention}4{} {C:tarot}Tarot{}",
+                    "cards when claimed."
+                }
+            },
+            lp_baliatro_two_spectral_cards = {
+                name = "Two Spectral Cards",
+                text = {
+                    "Grants {C:attention}2{} {C:spectral}Spectral{}",
+                    "cards when claimed."
+                }
+            },
+            lp_baliatro_postcard = {
+                name = "Postcard",
+                text = {
+                    "Grants {C:attention}1{} {C:attention}Postcard{}",
+                    "when claimed."
+                }
+            },
+            lp_baliatro_voucher = {
+                name = "Voucher",
+                text = {
+                    "Grants {C:attention}1{} {C:attention}Voucher{}",
+                    "when claimed."
+                }
+            },
+            lp_baliatro_six_playing_cards = {
+                name = "Six Playing Cards",
+                text = {
+                    "Grants {C:attention}6{} playing",
+                    "cards when claimed."
+                }
+            },
+            lp_baliatro_two_saturated_playing_cards = {
+                name = "Two Saturated Playing Cards",
+                text = {
+                    "Grants {C:attention}2{} {C:attention}Saturated{}",
+                    "playing cards when claimed."
+                }
+            },
+            lp_baliatro_four_planets = {
+                name = "Four Planets",
+                text = {
+                    "Grants {C:attention}4{} {C:planet}Planet{}",
+                    "cards when claimed."
+                }
+            },
+            lp_baliatro_four_mirrored_planets = {
+                name = "Four Identical Planets",
+                text = {
+                    "Grants {C:attention}4{} copies",
+                    "of a {C:planet}Planet{} card",
+                    "when claimed."
+                }
+            },
+            lp_baliatro_four_negative_planets = {
+                name = "Four Negative Planets",
+                text = {
+                    "Grants {C:attention}4{} {C:dark_edition}Negative{}",
+                    "{C:planet}Planet{} cards when claimed."
+                }
+            },
+            lp_baliatro_crystal_ball = {
+                name = "Crystal Ball",
+                text = {
+                    "Grants {C:attention}1{} {C:purple}Crystal Ball{}",
+                    "{C:attention}Voucher{} when claimed."
+                }
+            },
+        },
         Other={
             undiscovered_postcard = {
                 name = "Not Discovered",
@@ -1596,6 +1817,15 @@ return {
                     "{s:1.2,C:red}Choose a Deal with the Devil",
                     "Gain an audience and pick {C:attention}#1#{} of up to {C:attention}#2#{} {C:joker}Pacts{}.",
                     "{s:0.8,C:red}Once audience is gained, it would be very unwise to refuse.{}"
+                }
+            },
+            p_baliatro_loot_pack = {
+                group_name = "Loot Pack",
+                name = "Loot Pack",
+                text = {
+                    "Why are you",
+                    "able to see",
+                    "this text?"
                 }
             },
         },
@@ -1954,8 +2184,11 @@ return {
         challenge_names={},
         collabs={},
         dictionary={
+            b_baliatro_discard_unwanted_loot = "Discard selected loot",
             b_baliatro_moons = "Moons",
             b_baliatro_ranks = "Ranks",
+            b_baliatro_loot = "Loot",
+            b_baliatro_take = 'Take',
             baliatro_ulti = "Ulti!",
             baliatro_planet_moon = "Moon",
             baliatro_interest = "Interest",
@@ -1970,7 +2203,9 @@ return {
             baliatro_parade="Parade!",
             baliatro_cannot_transfer="Cannot transfer!",
             baliatro_postcard="Postcard",
+            baliatro_loot="Loot",
             k_baliatro_postcard="Postcard",
+            k_baliatro_loot="Loot",
             k_baliatro_unknown="Unknown",
             k_baliatro_inflation_ex = "Inflation!",
             k_baliatro_en_passant_ex = "En Passant!",
@@ -1984,6 +2219,7 @@ return {
             k_baliatro_destroyed_ex="Destroyed!",
             baliatro_mortgage = "Mortgage",
             k_baliatro_postcard_pack = "Postcard Pack",
+            k_baliatro_loot_pack = "Loot Pack",
             k_baliatro_upgraded_buffoon_pack = "Upgraded Buffoon Pack",
             k_baliatro_pact_pack = "Audience with the Devil",
             k_baliatro_banned_ex = "Banned!",
@@ -2018,6 +2254,13 @@ return {
             k_baliatro_failed_ex = 'Failed!',
             k_baliatro_autocompletes_ex = 'Automatically completes',
             k_baliatro_rewards_colon = 'Rewards:',
+            k_baliatro_progress_colon = 'Progress:',
+            k_baliatro_skip_to_claim_loot = "Skip any blind to claim accumulated loot",
+            k_baliatro_no_loot_to_claim = "No loot currently accumulated",
+            k_baliatro_select_loot_to_discard = "Select loot to discard any undesired",
+            k_baliatro_overflow = "Loot bag full!",
+            k_baliatro_identical = "Identical",
+            k_baliatro_lootplaceholder = "Loot",
         },
         high_scores={},
         labels={
@@ -2035,6 +2278,8 @@ return {
             baliatro_faded_holo = "Faded Holographic",
             baliatro_faded_polychrome = "Faded Polychrome",
             baliatro_pact = "Pact",
+            baliatro_lootplaceholder = "Loot",
+            baliatro_loot = "Loot",
         },
         poker_hand_descriptions={},
         poker_hands={},

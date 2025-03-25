@@ -1,6 +1,6 @@
 BALIATRO = {
     feature_flags = {
-        loot = false
+        loot = true
     }
 }
 
