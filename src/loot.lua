@@ -99,6 +99,18 @@ BALIATRO.LootPlaceholder = SMODS.Center:extend {
                 description[#description+1] = localize('k_baliatro_identical')
             end
 
+            if self.generates.enhanced then
+                description[#description+1] = localize('k_baliatro_enhanced')
+            end
+
+            if self.generates.sealed then
+                description[#description+1] = localize('k_baliatro_sealed')
+            end
+
+            if self.generates.random_edition then
+                description[#description+1] = localize('k_baliatro_random_edition')
+            end
+
             if self.generates.saturated then
                 description[#description+1] = localize('k_baliatro_saturated')
             end
@@ -123,20 +135,21 @@ BALIATRO.LootPlaceholder = SMODS.Center:extend {
             local forced_key = card.ability.mirrored_key
             local target = SMODS.create_card{set=self.generates.set, area=G.pack_cards, edition=self.generates.edition, no_edition=self.generates.edition ~= nil or nil, rarity=self.generates.rarity, legendary=self.generates.rarity == 4, key=forced_key}
 
-            if self.generates.set == 'Base' and self.generates.saturated then
-                local _enh = SMODS.poll_enhancement({guaranteed = true})
-                local _seal = SMODS.poll_seal({guaranteed = true})
-                local _ed = poll_edition('lph', nil, nil, true)
+            if self.generates.set == 'Base' then
+                local _enh = SMODS.poll_enhancement({guaranteed = self.generates.saturated or self.generates.enhanced})
+                local _seal = SMODS.poll_seal({guaranteed = self.generates.saturated or self.generates.sealed})
+                local _ed = poll_edition('lph', nil, self.generates.no_negative, self.generates.saturated or self.generates.random_edition)
 
-                target:set_ability(G.P_CENTERS[_enh])
-                target:set_seal(_seal)
-                target:set_edition(_ed)
+                if _enh then target:set_ability(G.P_CENTERS[_enh]) end
+                if _seal then target:set_seal(_seal) end
+                if _ed then target:set_edition(_ed) end
 
-                if target.edition.config and target.edition.config.card_limit then
+                if target.edition and target.edition.card_limit and not self.generates.no_immortal then
                     target:set_immortal(true)
                 end
             end
             if self.generates.eternal then
+                if target.ability.perishable then target.ability.perishable = nil end
                 target:set_eternal(true)
             end
             if self.generates.immortal then
@@ -1102,7 +1115,7 @@ BALIATRO.evaluate_round_goals = function()
         if success then
             local overflow = false
             for _, loot in ipairs(goal_data.reward) do
-                if #G.loot >= G.loot.config.card_limit then
+                if #G.loot.cards >= G.loot.config.card_limit then
                     overflow = true
                     break
                 end
@@ -1510,7 +1523,7 @@ BALIATRO.Goal {
     end,
 
     loc_vars = function(self, goal)
-        return {vars = {goal.fail_on_different_hands_played}}
+        return {vars = {goal.fail_on_different_hands_played - 1}}
     end
 }
 
@@ -1800,8 +1813,8 @@ G.FUNCS.baliatro_take_card = function(e)
     if card.children.sell_button then card.children.sell_button:remove(); card.children.sell_button = nil end
     if card.children.price then card.children.price:remove(); card.children.price = nil end
 
-    G.TAROT_INTERRUPT = G.STATE
-    G.STATE = G.STATES.PLAY_TAROT
+    --G.TAROT_INTERRUPT = G.STATE
+    --G.STATE = G.STATES.PLAY_TAROT
     G.CONTROLLER.locks.use = true
     --if G.booster_pack and not G.booster_pack.alignment.offset.py and not (G.GAME.pack_choices and G.GAME.pack_choices > 1) then
     --    G.booster_pack.alignment.offset.py = G.booster_pack.alignment.offset.y
@@ -1813,12 +1826,18 @@ G.FUNCS.baliatro_take_card = function(e)
 
     card:add_to_deck()
     cardarea:emplace(card)
+    if cardarea == G.hand then
+        G.deck.config.card_limit = G.deck.config.card_limit + 1
+        G.playing_card = (G.playing_card and G.playing_card + 1) or 1
+        card.playing_card = G.playing_card
+        table.insert(G.playing_cards, card)
+    end
     play_sound('card1', 0.8, 0.6)
     play_sound('generic1')
 
     G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.2, func = function()
-        G.STATE = prev_state
-        G.TAROT_INTERRUPT = nil
+        --G.STATE = prev_state
+        --G.TAROT_INTERRUPT = nil
         G.CONTROLLER.locks.use = false
 
         if G.GAME.pack_choices and G.GAME.pack_choices > 1 and G.booster_pack then

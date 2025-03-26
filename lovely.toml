@@ -608,6 +608,37 @@ match_indent = true
 position = 'at'
 payload = "if self.name == 'Double Tag' and _context.tag.key ~= 'tag_double' and not G.P_TAGS[_context.tag.key].double_tag_incompat then"
 
+## Disable child particles for loot pack
+## I'm sorry about this one.
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''self.children.particles = Particles(0, 0, 0,0, {
+    timer_type = 'TOTAL',
+    timer = 0.025*dissolve_time,
+    scale = 0.25,
+    speed = 3,
+    lifespan = 0.7*dissolve_time,
+    attach = self,
+    colours = self.dissolve_colours,
+    fill = true
+})'''
+match_indent = true
+position = 'at'
+payload = '''-- TARGET: Card:start_materialize before particles
+if not self.area == G.pack_cards or not SMODS.OPENED_BOOSTER or not SMODS.OPENED_BOOSTER.config.center.baliatro_loot_pack then
+    self.children.particles = Particles(0, 0, 0,0, {
+    timer_type = 'TOTAL',
+    timer = 0.025*dissolve_time,
+    scale = 0.25,
+    speed = 3,
+    lifespan = 0.7*dissolve_time,
+    attach = self,
+    colours = self.dissolve_colours,
+    fill = true
+})
+end
+-- TARGET: Card:start_materialize after particles'''
 
 ## Bypass BALIATRO copy_card restriction for deck viewer
 [[patches]]
